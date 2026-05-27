@@ -39,6 +39,10 @@
             -moz-osx-font-smoothing: grayscale;
         }
 
+        body.modal-open {
+            overflow: hidden !important;
+        }
+
         .noise-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -554,19 +558,18 @@
             text-transform: uppercase;
         }
 
-        /* ===== FULL-SCREEN VIDEO MODAL ===== */
+        /* ===== TRUE FULLSCREEN VIDEO MODAL ===== */
         .video-modal {
             position: fixed;
             top: 0; left: 0;
-            width: 100%; height: 100%;
+            width: 100vw; height: 100vh;
             z-index: 10000;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align-items: stretch;
+            justify-content: stretch;
             opacity: 0;
             visibility: hidden;
             transition: all 0.5s var(--transition-ease);
-            padding: 40px;
         }
         .video-modal.active {
             opacity: 1;
@@ -576,49 +579,46 @@
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(30px);
+            background: #000000;
         }
         .modal-content {
             position: relative;
             z-index: 1;
-            width: 95vw;
-            max-width: 1600px;
-            height: 85vh;
-            max-height: 900px;
-            transform: scale(0.92) translateY(20px);
-            transition: transform 0.5s var(--transition-ease);
-        }
-        .video-modal.active .modal-content {
-            transform: scale(1) translateY(0);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .modal-content iframe {
             width: 100%;
             height: 100%;
             border: none;
-            border-radius: 12px;
+            border-radius: 0;
         }
         .modal-close {
             position: absolute;
-            top: -56px;
-            right: 0;
-            width: 48px; height: 48px;
-            border: 1px solid rgba(255,255,255,0.25);
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+            width: 50px; height: 50px;
+            border: 1px solid rgba(255,255,255,0.3);
             border-radius: 50%;
-            background: rgba(255,255,255,0.05);
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s var(--transition-ease);
-            z-index: 2;
         }
         .modal-close:hover {
             background: rgba(255,255,255,0.15);
             border-color: white;
+            transform: rotate(90deg);
         }
         .modal-close svg {
-            width: 20px; height: 20px;
+            width: 22px; height: 22px;
             stroke: white;
             stroke-width: 2;
         }
@@ -907,13 +907,7 @@
             }
             .custom-cursor, .cursor-dot { display: none; }
             .play-btn { width: 50px; height: 50px; }
-            .video-modal { padding: 16px; }
-            .modal-content {
-                width: 100vw;
-                height: 70vh;
-                max-height: none;
-            }
-            .modal-close { top: -44px; }
+            .modal-close { top: 12px; right: 12px; width: 44px; height: 44px; }
         }
 
         @media (max-width: 480px) {
@@ -946,6 +940,7 @@
         <div class="loader-bar"><div class="loader-bar-fill" id="loaderBarFill"></div></div>
     </div>
 
+    <!-- TRUE FULLSCREEN VIDEO MODAL -->
     <div class="video-modal" id="videoModal">
         <div class="modal-backdrop" id="modalBackdrop"></div>
         <div class="modal-content" id="modalContent">
@@ -1063,9 +1058,6 @@
     <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
 
     <script>
-    /* ============================================
-       DATA
-       ============================================ */
     const videos = [
         { id: 'guuKxslbK7w', title: 'This Classified Leak Explains Everything', category: 'Mystery / Thriller', size: '2x2' },
         { id: 'p2IAZWta9X4', title: 'Classified Leak — The Untold Story', category: 'Mysterious / Scary', size: '1x2' },
@@ -1121,190 +1113,99 @@
         kids: '<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>'
     };
 
-    /* ============================================
-       LOADER
-       ============================================ */
+    // Loader
     let loadProgress = 0;
     const loaderBar = document.getElementById('loaderBarFill');
     const loaderEl = document.getElementById('loader');
-
     const loadInterval = setInterval(() => {
         loadProgress += Math.random() * 15 + 5;
         if (loadProgress >= 100) {
             loadProgress = 100;
             clearInterval(loadInterval);
-            setTimeout(() => {
-                loaderEl.classList.add('hidden');
-                initAnimations();
-            }, 400);
+            setTimeout(() => { loaderEl.classList.add('hidden'); initAnimations(); }, 400);
         }
         loaderBar.style.width = loadProgress + '%';
     }, 200);
 
-    /* ============================================
-       CURSOR
-       ============================================ */
+    // Cursor
     const cursorEl = document.getElementById('customCursor');
     const cursorDotEl = document.getElementById('cursorDot');
-    let mouseXPos = 0, mouseYPos = 0;
-    let cursorXPos = 0, cursorYPos = 0;
-
-    document.addEventListener('mousemove', (e) => {
-        mouseXPos = e.clientX;
-        mouseYPos = e.clientY;
-        cursorDotEl.style.left = (mouseXPos - 3) + 'px';
-        cursorDotEl.style.top = (mouseYPos - 3) + 'px';
-    });
-
-    function animateCursor() {
-        cursorXPos += (mouseXPos - cursorXPos) * 0.15;
-        cursorYPos += (mouseYPos - cursorYPos) * 0.15;
-        cursorEl.style.left = (cursorXPos - 10) + 'px';
-        cursorEl.style.top = (cursorYPos - 10) + 'px';
-        requestAnimationFrame(animateCursor);
-    }
+    let mx = 0, my = 0, cx = 0, cy = 0;
+    document.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; cursorDotEl.style.left = (mx-3)+'px'; cursorDotEl.style.top = (my-3)+'px'; });
+    function animateCursor() { cx += (mx-cx)*0.15; cy += (my-cy)*0.15; cursorEl.style.left = (cx-10)+'px'; cursorEl.style.top = (cy-10)+'px'; requestAnimationFrame(animateCursor); }
     animateCursor();
-
     document.querySelectorAll('.hero-cta, .footer-cta-btn, .nav-cta, .social-card, .footer-social-link, .video-card').forEach(el => {
         el.addEventListener('mouseenter', () => cursorEl.classList.add('active'));
         el.addEventListener('mouseleave', () => cursorEl.classList.remove('active'));
     });
 
-    /* ============================================
-       LENIS SMOOTH SCROLL
-       ============================================ */
-    const lenis = new Lenis({
-        duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        smooth: true,
-        smoothTouch: false
-    });
+    // Lenis
+    const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10*t)), smooth: true, smoothTouch: false });
     function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
     requestAnimationFrame(raf);
-
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', function(e) {
             e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) lenis.scrollTo(target, { offset: -80 });
+            const t = document.querySelector(this.getAttribute('href'));
+            if (t) lenis.scrollTo(t, { offset: -80 });
             mobileMenu.classList.remove('active');
             menuToggle.classList.remove('active');
         });
     });
 
-    /* ============================================
-       PARTICLES
-       ============================================ */
-    const canvas = document.getElementById('particleCanvas');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-
-    class Particle {
+    // Particles
+    const pCanvas = document.getElementById('particleCanvas');
+    const pCtx = pCanvas.getContext('2d');
+    function resizeP() { pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; }
+    resizeP(); window.addEventListener('resize', resizeP);
+    let pArr = [];
+    class P {
         constructor() { this.reset(); }
-        reset() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.size = Math.random() * 2 + 0.5;
-            this.speedX = (Math.random() - 0.5) * 0.3;
-            this.speedY = (Math.random() - 0.5) * 0.2 - 0.1;
-            this.opacity = Math.random() * 0.5 + 0.1;
-            this.fadeDir = 1;
-            this.fadeSpeed = Math.random() * 0.005 + 0.002;
-        }
-        update() {
-            this.x += this.speedX;
-            this.y += this.speedY;
-            this.opacity += this.fadeSpeed * this.fadeDir;
-            if (this.opacity >= 0.6) this.fadeDir = -1;
-            if (this.opacity <= 0.05) this.fadeDir = 1;
-            if (this.x < -10 || this.x > canvas.width + 10 || this.y < -10 || this.y > canvas.height + 10) {
-                this.reset();
-                this.y = canvas.height + 10;
-            }
-        }
-        draw() {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(26,26,26,${this.opacity})`;
-            ctx.fill();
-        }
+        reset() { this.x = Math.random()*pCanvas.width; this.y = Math.random()*pCanvas.height; this.s = Math.random()*2+0.5; this.vx = (Math.random()-0.5)*0.3; this.vy = (Math.random()-0.5)*0.2-0.1; this.o = Math.random()*0.5+0.1; this.fd = 1; this.fs = Math.random()*0.005+0.002; }
+        update() { this.x += this.vx; this.y += this.vy; this.o += this.fs*this.fd; if(this.o>=0.6) this.fd=-1; if(this.o<=0.05) this.fd=1; if(this.x<-10||this.x>pCanvas.width+10||this.y<-10||this.y>pCanvas.height+10){this.reset();this.y=pCanvas.height+10;} }
+        draw() { pCtx.beginPath(); pCtx.arc(this.x,this.y,this.s,0,Math.PI*2); pCtx.fillStyle=`rgba(26,26,26,${this.o})`; pCtx.fill(); }
     }
-    for (let i = 0; i < 60; i++) particles.push(new Particle());
-    function animateParticles() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => { p.update(); p.draw(); });
-        requestAnimationFrame(animateParticles);
-    }
-    animateParticles();
+    for(let i=0;i<60;i++) pArr.push(new P());
+    function animP(){ pCtx.clearRect(0,0,pCanvas.width,pCanvas.height); pArr.forEach(p=>{p.update();p.draw();}); requestAnimationFrame(animP); }
+    animP();
 
-    /* ============================================
-       NAVBAR
-       ============================================ */
+    // Navbar
     const navbar = document.getElementById('navbar');
-    lenis.on('scroll', ({ scroll }) => {
-        navbar.classList.toggle('scrolled', scroll > 100);
-    });
+    lenis.on('scroll', ({ scroll }) => { navbar.classList.toggle('scrolled', scroll > 100); });
 
-    /* ============================================
-       MOBILE MENU
-       ============================================ */
+    // Mobile menu
     const menuToggle = document.getElementById('menuToggle');
     const mobileMenu = document.getElementById('mobileMenu');
-    menuToggle.addEventListener('click', () => {
-        menuToggle.classList.toggle('active');
-        mobileMenu.classList.toggle('active');
-    });
-    document.querySelectorAll('.mobile-menu a').forEach(link => {
-        link.addEventListener('click', () => {
-            menuToggle.classList.remove('active');
-            mobileMenu.classList.remove('active');
-        });
-    });
+    menuToggle.addEventListener('click', () => { menuToggle.classList.toggle('active'); mobileMenu.classList.toggle('active'); });
+    document.querySelectorAll('.mobile-menu a').forEach(l => l.addEventListener('click', () => { menuToggle.classList.remove('active'); mobileMenu.classList.remove('active'); }));
 
-    /* ============================================
-       BUILD VIDEO GRID
-       ============================================ */
+    // Video grid
     const videoGrid = document.getElementById('videoGrid');
-
-    videos.forEach((vid, idx) => {
+    videos.forEach((vid) => {
         const card = document.createElement('div');
         card.className = `video-card size-${vid.size}`;
-        const thumbFallback = `https://img.youtube.com/vi/${vid.id}/hqdefault.jpg`;
+        const thumb = `https://img.youtube.com/vi/${vid.id}/hqdefault.jpg`;
         card.innerHTML = `
-            <img class="thumbnail" src="${thumbFallback}" alt="${vid.title}" loading="lazy" />
+            <img class="thumbnail" src="${thumb}" alt="${vid.title}" loading="lazy" />
             <div class="play-overlay">
-                <div class="play-btn">
-                    <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
-                </div>
+                <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div>
             </div>
-            <div class="card-info">
-                <h3>${vid.title}</h3>
-                <p>${vid.category}</p>
-            </div>
+            <div class="card-info"><h3>${vid.title}</h3><p>${vid.category}</p></div>
         `;
         card.addEventListener('mouseenter', function() {
             const img = this.querySelector('.thumbnail');
             if (!img.dataset.triedMax) {
                 img.dataset.triedMax = 'true';
-                const testImg = new Image();
-                testImg.onload = () => { img.src = `https://img.youtube.com/vi/${vid.id}/maxresdefault.jpg`; };
-                testImg.src = `https://img.youtube.com/vi/${vid.id}/maxresdefault.jpg`;
+                const ti = new Image();
+                ti.onload = () => { img.src = `https://img.youtube.com/vi/${vid.id}/maxresdefault.jpg`; };
+                ti.src = `https://img.youtube.com/vi/${vid.id}/maxresdefault.jpg`;
             }
         }, { once: true });
         card.addEventListener('click', () => openVideoModal(vid.id));
         videoGrid.appendChild(card);
     });
 
-    /* ============================================
-       VIDEO MODAL — LARGE / NEAR FULL-SCREEN
-       ============================================ */
+    // FULLSCREEN VIDEO MODAL
     const videoModal = document.getElementById('videoModal');
     const videoPlayer = document.getElementById('videoPlayer');
     const modalClose = document.getElementById('modalClose');
@@ -1312,15 +1213,15 @@
 
     function openVideoModal(videoId) {
         const originUrl = window.location.origin;
-        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&origin=${encodeURIComponent(originUrl)}`;
-        videoPlayer.innerHTML = `<iframe src="${embedUrl}" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;border-radius:12px;"></iframe>`;
+        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&fs=1&origin=${encodeURIComponent(originUrl)}`;
+        videoPlayer.innerHTML = `<iframe src="${embedUrl}" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen" allowfullscreen style="width:100%;height:100%;border:none;"></iframe>`;
         videoModal.classList.add('active');
-        document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
     }
 
     function closeVideoModal() {
         videoModal.classList.remove('active');
-        document.body.style.overflow = '';
+        document.body.classList.remove('modal-open');
         setTimeout(() => { videoPlayer.innerHTML = ''; }, 500);
     }
 
@@ -1328,26 +1229,19 @@
     modalBackdrop.addEventListener('click', closeVideoModal);
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVideoModal(); });
 
-    /* ============================================
-       BUILD CAPABILITIES
-       ============================================ */
+    // Capabilities
     const capabilitiesGrid = document.getElementById('capabilitiesGrid');
     capabilities.forEach((cap) => {
         const card = document.createElement('div');
         card.className = 'capability-card';
         card.innerHTML = `
-            <div class="capability-icon">
-                <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${iconPaths[cap.icon]}</svg>
-            </div>
-            <h4>${cap.title}</h4>
-            <p>${cap.desc}</p>
+            <div class="capability-icon"><svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${iconPaths[cap.icon]}</svg></div>
+            <h4>${cap.title}</h4><p>${cap.desc}</p>
         `;
         capabilitiesGrid.appendChild(card);
     });
 
-    /* ============================================
-       BUILD SOCIAL CARDS
-       ============================================ */
+    // Social cards
     const socialCardsGrid = document.getElementById('socialCardsGrid');
     socialChannels.forEach((ch) => {
         const card = document.createElement('a');
@@ -1356,123 +1250,44 @@
         card.target = '_blank';
         card.rel = 'noopener noreferrer';
         card.innerHTML = `
-            <div class="social-card-icon" style="background: rgba(200,164,92,0.15);">
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${iconPaths[ch.icon]}</svg>
-            </div>
-            <h4>${ch.title}</h4>
-            <p>${ch.desc}</p>
-            <div class="card-arrow">
-                <span>${ch.label}</span>
-                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </div>
+            <div class="social-card-icon" style="background:rgba(200,164,92,0.15);"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${iconPaths[ch.icon]}</svg></div>
+            <h4>${ch.title}</h4><p>${ch.desc}</p>
+            <div class="card-arrow"><span>${ch.label}</span><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         `;
         socialCardsGrid.appendChild(card);
     });
 
-    /* ============================================
-       GSAP ANIMATIONS
-       ============================================ */
+    // GSAP
     gsap.registerPlugin(ScrollTrigger);
-
     function initAnimations() {
-        gsap.utils.toArray('.hero-title .line span').forEach((span, i) => {
-            gsap.to(span, {
-                y: 0, opacity: 1,
-                duration: 1, ease: 'power4.out',
-                delay: 0.3 + i * 0.15
-            });
+        gsap.utils.toArray('.hero-title .line span').forEach((s, i) => {
+            gsap.to(s, { y:0, opacity:1, duration:1, ease:'power4.out', delay:0.3+i*0.15 });
         });
-
-        gsap.to('#heroTagline', {
-            y: 0, opacity: 1,
-            duration: 0.8, ease: 'power3.out', delay: 0.9
+        gsap.to('#heroTagline', { y:0, opacity:1, duration:0.8, ease:'power3.out', delay:0.9 });
+        gsap.to('#heroCta', { y:0, opacity:1, duration:0.8, ease:'power3.out', delay:1.1 });
+        gsap.to('#scrollIndicator', { opacity:1, duration:0.8, ease:'power3.out', delay:1.4 });
+        gsap.utils.toArray('.video-card').forEach((c, i) => {
+            gsap.to(c, { opacity:1, y:0, scale:1, duration:0.7, ease:'power3.out', scrollTrigger:{trigger:c, start:'top 90%', toggleActions:'play none none reverse'}, delay:i*0.06 });
         });
-
-        gsap.to('#heroCta', {
-            y: 0, opacity: 1,
-            duration: 0.8, ease: 'power3.out', delay: 1.1
+        gsap.utils.toArray('.capability-card').forEach((c, i) => {
+            gsap.to(c, { opacity:1, y:0, duration:0.7, ease:'power3.out', scrollTrigger:{trigger:c, start:'top 88%', toggleActions:'play none none reverse'}, delay:i*0.1 });
         });
-
-        gsap.to('#scrollIndicator', {
-            opacity: 1,
-            duration: 0.8, ease: 'power3.out', delay: 1.4
+        gsap.utils.toArray('.social-card').forEach((c, i) => {
+            gsap.to(c, { opacity:1, y:0, duration:0.7, ease:'power3.out', scrollTrigger:{trigger:c, start:'top 88%', toggleActions:'play none none reverse'}, delay:i*0.15 });
         });
-
-        gsap.utils.toArray('.video-card').forEach((card, i) => {
-            gsap.to(card, {
-                opacity: 1, y: 0, scale: 1,
-                duration: 0.7, ease: 'power3.out',
-                scrollTrigger: {
-                    trigger: card,
-                    start: 'top 90%',
-                    toggleActions: 'play none none reverse'
-                },
-                delay: i * 0.06
-            });
-        });
-
-        gsap.utils.toArray('.capability-card').forEach((card, i) => {
-            gsap.to(card, {
-                opacity: 1, y: 0,
-                duration: 0.7, ease: 'power3.out',
-                scrollTrigger: {
-                    trigger: card,
-                    start: 'top 88%',
-                    toggleActions: 'play none none reverse'
-                },
-                delay: i * 0.1
-            });
-        });
-
-        gsap.utils.toArray('.social-card').forEach((card, i) => {
-            gsap.to(card, {
-                opacity: 1, y: 0,
-                duration: 0.7, ease: 'power3.out',
-                scrollTrigger: {
-                    trigger: card,
-                    start: 'top 88%',
-                    toggleActions: 'play none none reverse'
-                },
-                delay: i * 0.15
-            });
-        });
-
         gsap.utils.toArray('.reveal-up').forEach(el => {
-            gsap.to(el, {
-                opacity: 1, y: 0,
-                duration: 0.8, ease: 'power3.out',
-                scrollTrigger: {
-                    trigger: el,
-                    start: 'top 88%',
-                    toggleActions: 'play none none reverse'
-                }
-            });
+            gsap.to(el, { opacity:1, y:0, duration:0.8, ease:'power3.out', scrollTrigger:{trigger:el, start:'top 88%', toggleActions:'play none none reverse'} });
         });
-
-        gsap.to('.hero-bg-grid', {
-            y: 200, ease: 'none',
-            scrollTrigger: {
-                trigger: '.hero',
-                start: 'top top',
-                end: 'bottom top',
-                scrub: 1
-            }
-        });
+        gsap.to('.hero-bg-grid', { y:200, ease:'none', scrollTrigger:{trigger:'.hero', start:'top top', end:'bottom top', scrub:1} });
     }
 
-    /* ============================================
-       MAGNETIC HOVER
-       ============================================ */
+    // Magnetic hover
     document.querySelectorAll('.hero-cta, .footer-cta-btn').forEach(btn => {
         btn.addEventListener('mousemove', (e) => {
-            const rect = btn.getBoundingClientRect();
-            const x = e.clientX - rect.left - rect.width / 2;
-            const y = e.clientY - rect.top - rect.height / 2;
-            btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+            const r = btn.getBoundingClientRect();
+            btn.style.transform = `translate(${(e.clientX-r.left-r.width/2)*0.2}px, ${(e.clientY-r.top-r.height/2)*0.2}px)`;
         });
-        btn.addEventListener('mouseleave', () => {
-            btn.style.transform = 'translate(0, 0)';
-        });
+        btn.addEventListener('mouseleave', () => { btn.style.transform = 'translate(0,0)'; });
     });
     </script>
 </body>
