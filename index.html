@@ -15,13 +15,17 @@
         }
 
         :root {
-            --bg: #ede5d0;
-            --bg-dark: #e4d9c0;
-            --text: #1a1a1a;
-            --text-light: #4a4a4a;
-            --accent: #c8a45c;
-            --accent-dark: #a07d3a;
-            --glass: rgba(237, 229, 208, 0.7);
+            --bg: #0a0a0a;
+            --bg-dark: #060606;
+            --bg-card: #111111;
+            --text: #f5f0e8;
+            --text-light: #a09880;
+            --gold: #c8a45c;
+            --gold-light: #f0d78c;
+            --gold-dark: #8a6d2b;
+            --gold-gradient: linear-gradient(135deg, #c8a45c, #f0d78c, #a07d3a);
+            --gold-shimmer: linear-gradient(90deg, #8a6d2b, #c8a45c, #f0d78c, #c8a45c, #8a6d2b);
+            --glass: rgba(10, 10, 10, 0.8);
             --transition-ease: cubic-bezier(0.16, 1, 0.3, 1);
             --transition-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
@@ -43,54 +47,120 @@
             overflow: hidden !important;
         }
 
+        /* Metallic Text Effect */
+        .gold-text {
+            background: var(--gold-shimmer);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shimmer 4s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* Gold Border Effect */
+        .gold-border {
+            border: 1px solid transparent;
+            background-clip: padding-box;
+            position: relative;
+        }
+        .gold-border::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            background: var(--gold-shimmer);
+            background-size: 200% 100%;
+            border-radius: inherit;
+            z-index: -1;
+            animation: shimmer 4s ease-in-out infinite;
+        }
+
+        /* Interactive Background Canvas */
+        #interactiveCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Cursor Glow */
+        .cursor-glow {
+            position: fixed;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            background: radial-gradient(circle, rgba(200,164,92,0.08) 0%, rgba(200,164,92,0.02) 40%, transparent 70%);
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s;
+        }
+
+        /* Noise Overlay */
         .noise-overlay {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             pointer-events: none;
             z-index: 9998;
-            opacity: 0.025;
+            opacity: 0.03;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
             background-repeat: repeat;
             background-size: 256px 256px;
         }
 
-        #particleCanvas {
+        /* Film grain animation */
+        .film-grain {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
             pointer-events: none;
-            z-index: 0;
-            opacity: 0.35;
+            z-index: 9997;
+            opacity: 0.04;
+            animation: grainShift 0.5s steps(1) infinite;
         }
 
+        @keyframes grainShift {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-2%, -1%); }
+            50% { transform: translate(1%, 2%); }
+            75% { transform: translate(-1%, -2%); }
+        }
+
+        /* Custom Cursor */
         .custom-cursor {
             position: fixed;
-            width: 20px; height: 20px;
-            border: 2px solid var(--text);
+            width: 24px; height: 24px;
+            border: 2px solid var(--gold);
             border-radius: 50%;
             pointer-events: none;
             z-index: 10000;
             transition: transform 0.15s var(--transition-smooth),
                         opacity 0.15s var(--transition-smooth),
-                        background-color 0.15s var(--transition-smooth);
+                        background-color 0.15s var(--transition-smooth),
+                        border-color 0.15s var(--transition-smooth);
             mix-blend-mode: difference;
         }
         .custom-cursor.active {
-            transform: scale(2.5);
-            background-color: rgba(255,255,255,0.1);
-            border-color: white;
+            transform: scale(2.8);
+            background-color: rgba(200,164,92,0.15);
+            border-color: var(--gold-light);
         }
         .cursor-dot {
             position: fixed;
             width: 6px; height: 6px;
-            background: var(--text);
+            background: var(--gold);
             border-radius: 50%;
             pointer-events: none;
             z-index: 10001;
-            mix-blend-mode: difference;
         }
 
+        /* Loader */
         .loader {
             position: fixed;
             top: 0; left: 0;
@@ -114,7 +184,7 @@
         }
         .loader-film .film-frame {
             width: 60px; height: 80px;
-            border: 3px solid var(--text);
+            border: 3px solid var(--gold);
             border-radius: 4px;
             position: relative;
             animation: filmFlicker 1.5s infinite;
@@ -125,18 +195,14 @@
             position: absolute;
             width: 8px; height: 100%;
             top: 0;
-            background: repeating-linear-gradient(
-                to bottom,
-                var(--text) 0px, var(--text) 6px,
-                transparent 6px, transparent 12px
-            );
+            background: repeating-linear-gradient(to bottom, var(--gold) 0px, var(--gold) 6px, transparent 6px, transparent 12px);
         }
         .loader-film .film-frame::before { left: -14px; }
         .loader-film .film-frame::after { right: -14px; }
         .loader-film .film-reel {
             position: absolute;
             width: 20px; height: 20px;
-            border: 2px solid var(--text);
+            border: 2px solid var(--gold);
             border-radius: 50%;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
@@ -146,14 +212,14 @@
             content: '';
             position: absolute;
             width: 6px; height: 6px;
-            background: var(--text);
+            background: var(--gold);
             border-radius: 50%;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
         }
         @keyframes filmFlicker {
             0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            50% { opacity: 0.6; }
         }
         @keyframes reelSpin {
             to { transform: translate(-50%, -50%) rotate(360deg); }
@@ -163,21 +229,22 @@
             font-size: 14px;
             letter-spacing: 8px;
             text-transform: uppercase;
-            color: var(--text-light);
+            color: var(--gold);
         }
         .loader-bar {
             width: 120px; height: 2px;
-            background: rgba(0,0,0,0.1);
+            background: rgba(200,164,92,0.15);
             margin-top: 20px;
             border-radius: 1px;
             overflow: hidden;
         }
         .loader-bar-fill {
             width: 0%; height: 100%;
-            background: var(--text);
+            background: var(--gold-gradient);
             transition: width 0.3s linear;
         }
 
+        /* Navbar */
         .navbar {
             position: fixed;
             top: 0; left: 0;
@@ -194,7 +261,7 @@
             background: var(--glass);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid rgba(200,164,92,0.1);
         }
         .nav-logo {
             display: flex;
@@ -207,6 +274,7 @@
             height: 40px;
             width: auto;
             transition: transform 0.3s var(--transition-ease);
+            filter: drop-shadow(0 0 8px rgba(200,164,92,0.3));
         }
         .nav-logo:hover img {
             transform: scale(1.05);
@@ -219,20 +287,24 @@
         }
         .nav-links a {
             text-decoration: none;
-            color: var(--text);
+            color: var(--text-light);
             font-size: 13px;
             font-weight: 500;
             letter-spacing: 2px;
             text-transform: uppercase;
             position: relative;
             padding: 4px 0;
+            transition: color 0.3s;
+        }
+        .nav-links a:hover {
+            color: var(--gold);
         }
         .nav-links a::after {
             content: '';
             position: absolute;
             bottom: 0; left: 0;
             width: 0%; height: 1px;
-            background: var(--text);
+            background: var(--gold-gradient);
             transition: width 0.4s var(--transition-ease);
         }
         .nav-links a:hover::after {
@@ -240,7 +312,7 @@
         }
         .nav-cta {
             padding: 10px 24px;
-            background: var(--text);
+            background: var(--gold-gradient);
             color: var(--bg) !important;
             border-radius: 100px;
             font-size: 12px !important;
@@ -249,8 +321,8 @@
         }
         .nav-cta::after { display: none !important; }
         .nav-cta:hover {
-            background: var(--accent-dark);
             transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(200,164,92,0.3);
         }
 
         .menu-toggle {
@@ -263,17 +335,13 @@
         }
         .menu-toggle span {
             width: 28px; height: 2px;
-            background: var(--text);
+            background: var(--gold);
             transition: all 0.3s var(--transition-ease);
             transform-origin: center;
         }
-        .menu-toggle.active span:nth-child(1) {
-            transform: rotate(45deg) translate(5px, 6px);
-        }
+        .menu-toggle.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 6px); }
         .menu-toggle.active span:nth-child(2) { opacity: 0; }
-        .menu-toggle.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(5px, -6px);
-        }
+        .menu-toggle.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -6px); }
         .mobile-menu {
             position: fixed;
             top: 0; right: -100%;
@@ -306,6 +374,7 @@
         .mobile-menu a:nth-child(2) { transition-delay: 0.2s; }
         .mobile-menu a:nth-child(3) { transition-delay: 0.3s; }
 
+        /* Hero */
         .hero {
             position: relative;
             min-height: 100vh;
@@ -315,15 +384,23 @@
             flex-direction: column;
             padding: 120px 40px 80px;
             overflow: hidden;
+            z-index: 1;
         }
         .hero-bg-grid {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
             background-image:
-                linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+                linear-gradient(rgba(200,164,92,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(200,164,92,0.04) 1px, transparent 1px);
             background-size: 80px 80px;
+            z-index: 0;
+        }
+        .hero-vignette {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: radial-gradient(ellipse at center, transparent 40%, var(--bg) 100%);
             z-index: 0;
         }
         .hero-content {
@@ -363,7 +440,7 @@
             align-items: center;
             gap: 12px;
             padding: 18px 40px;
-            background: var(--text);
+            background: var(--gold-gradient);
             color: var(--bg);
             text-decoration: none;
             font-size: 13px;
@@ -377,22 +454,11 @@
             position: relative;
             overflow: hidden;
         }
-        .hero-cta::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 0; height: 0;
-            background: var(--accent-dark);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s var(--transition-ease), height 0.6s var(--transition-ease);
+        .hero-cta:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(200,164,92,0.35);
         }
-        .hero-cta:hover::before {
-            width: 300px; height: 300px;
-        }
-        .hero-cta span {
-            position: relative; z-index: 1;
-        }
+        .hero-cta span { position: relative; z-index: 1; }
         .hero-cta .arrow {
             position: relative; z-index: 1;
             transition: transform 0.3s var(--transition-ease);
@@ -411,7 +477,7 @@
         }
         .hero-scroll-indicator .mouse {
             width: 24px; height: 38px;
-            border: 2px solid var(--text);
+            border: 2px solid var(--gold);
             border-radius: 12px;
             position: relative;
         }
@@ -421,7 +487,7 @@
             top: 6px; left: 50%;
             transform: translateX(-50%);
             width: 3px; height: 8px;
-            background: var(--text);
+            background: var(--gold);
             border-radius: 2px;
             animation: scrollWheel 2s infinite;
         }
@@ -433,9 +499,10 @@
             font-size: 10px;
             letter-spacing: 3px;
             text-transform: uppercase;
-            color: var(--text-light);
+            color: var(--gold);
         }
 
+        /* Section Common */
         .section {
             position: relative;
             z-index: 1;
@@ -449,7 +516,7 @@
             font-size: 12px;
             letter-spacing: 6px;
             text-transform: uppercase;
-            color: var(--accent-dark);
+            color: var(--gold);
             margin-bottom: 16px;
             display: block;
         }
@@ -461,10 +528,11 @@
         }
         .section-divider {
             width: 60px; height: 2px;
-            background: var(--text);
+            background: var(--gold-gradient);
             margin: 24px auto 0;
         }
 
+        /* Video Showcase */
         .showcase {
             background: var(--bg-dark);
         }
@@ -481,22 +549,18 @@
             border-radius: 12px;
             overflow: hidden;
             cursor: pointer;
-            background: #1a1a1a;
+            background: var(--bg-card);
             opacity: 0;
             transform: translateY(40px) scale(0.96);
+            border: 1px solid rgba(200,164,92,0.08);
+            transition: border-color 0.4s var(--transition-ease);
         }
-        .video-card.size-2x2 {
-            grid-column: span 2;
-            grid-row: span 2;
+        .video-card:hover {
+            border-color: rgba(200,164,92,0.3);
         }
-        .video-card.size-2x1 {
-            grid-column: span 2;
-            grid-row: span 1;
-        }
-        .video-card.size-1x2 {
-            grid-column: span 1;
-            grid-row: span 2;
-        }
+        .video-card.size-2x2 { grid-column: span 2; grid-row: span 2; }
+        .video-card.size-2x1 { grid-column: span 2; grid-row: span 1; }
+        .video-card.size-1x2 { grid-column: span 1; grid-row: span 2; }
         .video-card .thumbnail {
             width: 100%; height: 100%;
             object-fit: cover;
@@ -504,7 +568,7 @@
         }
         .video-card:hover .thumbnail {
             transform: scale(1.06);
-            filter: brightness(0.55);
+            filter: brightness(0.45);
         }
         .video-card .play-overlay {
             position: absolute;
@@ -519,19 +583,22 @@
         .video-card:hover .play-overlay { opacity: 1; }
         .play-btn {
             width: 64px; height: 64px;
-            border: 2px solid white;
+            border: 2px solid var(--gold);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s var(--transition-ease);
             backdrop-filter: blur(10px);
-            background: rgba(255,255,255,0.12);
+            background: rgba(200,164,92,0.15);
         }
-        .video-card:hover .play-btn { transform: scale(1.1); }
+        .video-card:hover .play-btn {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(200,164,92,0.3);
+        }
         .play-btn svg {
             width: 22px; height: 22px;
-            fill: white;
+            fill: var(--gold);
             margin-left: 3px;
         }
         .video-card .card-info {
@@ -539,26 +606,26 @@
             bottom: 0; left: 0;
             width: 100%;
             padding: 40px 18px 16px;
-            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
             transform: translateY(100%);
             transition: transform 0.4s var(--transition-ease);
         }
         .video-card:hover .card-info { transform: translateY(0); }
         .card-info h3 {
-            color: white;
+            color: var(--text);
             font-size: 14px;
             font-weight: 600;
             margin-bottom: 4px;
             line-height: 1.3;
         }
         .card-info p {
-            color: rgba(255,255,255,0.55);
+            color: var(--gold);
             font-size: 11px;
             letter-spacing: 1px;
             text-transform: uppercase;
         }
 
-        /* ===== TRUE FULLSCREEN VIDEO MODAL ===== */
+        /* FULLSCREEN VIDEO MODAL */
         .video-modal {
             position: fixed;
             top: 0; left: 0;
@@ -594,17 +661,15 @@
             width: 100%;
             height: 100%;
             border: none;
-            border-radius: 0;
         }
         .modal-close {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: 20px; right: 20px;
             z-index: 10;
             width: 50px; height: 50px;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: 1px solid rgba(200,164,92,0.4);
             border-radius: 50%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             backdrop-filter: blur(10px);
             cursor: pointer;
             display: flex;
@@ -613,16 +678,17 @@
             transition: all 0.3s var(--transition-ease);
         }
         .modal-close:hover {
-            background: rgba(255,255,255,0.15);
-            border-color: white;
+            background: rgba(200,164,92,0.2);
+            border-color: var(--gold);
             transform: rotate(90deg);
         }
         .modal-close svg {
             width: 22px; height: 22px;
-            stroke: white;
+            stroke: var(--gold);
             stroke-width: 2;
         }
 
+        /* About */
         .about { background: var(--bg); }
         .about-grid {
             display: grid;
@@ -651,21 +717,21 @@
         }
         .capability-card {
             padding: 24px 20px;
-            border: 1px solid rgba(0,0,0,0.08);
+            border: 1px solid rgba(200,164,92,0.1);
             border-radius: 14px;
             transition: all 0.4s var(--transition-ease);
             opacity: 0;
             transform: translateY(30px);
-            background: var(--bg);
+            background: var(--bg-card);
         }
         .capability-card:hover {
-            border-color: var(--accent);
+            border-color: var(--gold);
             transform: translateY(-4px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.06);
+            box-shadow: 0 20px 60px rgba(200,164,92,0.08);
         }
         .capability-icon {
             width: 44px; height: 44px;
-            background: var(--text);
+            background: var(--gold-gradient);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -682,6 +748,7 @@
             font-size: 15px;
             font-weight: 600;
             margin-bottom: 6px;
+            color: var(--text);
         }
         .capability-card p {
             font-size: 13px;
@@ -689,23 +756,31 @@
             line-height: 1.5;
         }
 
+        /* Social Links Section */
         .social-links-section {
-            background: var(--text);
-            color: var(--bg);
+            background: var(--bg-dark);
             padding: 100px 40px;
+            position: relative;
+            overflow: hidden;
         }
-        .social-links-section .section-header {
-            margin-bottom: 60px;
+        .social-links-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
         }
-        .social-links-section .section-label {
-            color: var(--accent);
+        .social-links-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
         }
-        .social-links-section .section-title {
-            color: var(--bg);
-        }
-        .social-links-section .section-divider {
-            background: var(--bg);
-        }
+        .social-links-section .section-header { margin-bottom: 60px; }
+        .social-links-section .section-label { color: var(--gold); }
+        .social-links-section .section-title { color: var(--text); }
+        .social-links-section .section-divider { background: var(--gold-gradient); }
         .social-cards-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -714,12 +789,12 @@
             margin: 0 auto;
         }
         .social-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--bg-card);
+            border: 1px solid rgba(200,164,92,0.1);
             border-radius: 20px;
             padding: 40px 30px;
             text-decoration: none;
-            color: var(--bg);
+            color: var(--text);
             transition: all 0.4s var(--transition-ease);
             opacity: 0;
             transform: translateY(40px);
@@ -728,12 +803,22 @@
             align-items: center;
             text-align: center;
             gap: 16px;
+            position: relative;
+            overflow: hidden;
         }
+        .social-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(200,164,92,0.05), transparent);
+            transition: left 0.6s var(--transition-ease);
+        }
+        .social-card:hover::before { left: 100%; }
         .social-card:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: var(--accent);
+            border-color: var(--gold);
             transform: translateY(-6px);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 30px 60px rgba(200,164,92,0.12);
         }
         .social-card-icon {
             width: 64px; height: 64px;
@@ -742,19 +827,22 @@
             align-items: center;
             justify-content: center;
             margin-bottom: 8px;
+            background: linear-gradient(135deg, rgba(200,164,92,0.2), rgba(200,164,92,0.05));
+            border: 1px solid rgba(200,164,92,0.2);
         }
         .social-card-icon svg {
             width: 30px; height: 30px;
-            fill: var(--bg);
+            fill: var(--gold);
         }
         .social-card h4 {
             font-family: 'Bebas Neue', sans-serif;
             font-size: 22px;
             letter-spacing: 2px;
+            color: var(--text);
         }
         .social-card p {
             font-size: 13px;
-            color: rgba(255,255,255,0.5);
+            color: var(--text-light);
             line-height: 1.6;
         }
         .social-card .card-arrow {
@@ -763,28 +851,35 @@
             font-size: 12px;
             letter-spacing: 2px;
             text-transform: uppercase;
-            color: var(--accent);
+            color: var(--gold);
             display: flex;
             align-items: center;
             gap: 8px;
         }
         .social-card .card-arrow svg {
             width: 16px; height: 16px;
-            stroke: var(--accent);
+            stroke: var(--gold);
             stroke-width: 2;
             fill: none;
             transition: transform 0.3s var(--transition-ease);
         }
-        .social-card:hover .card-arrow svg {
-            transform: translateX(4px);
-        }
+        .social-card:hover .card-arrow svg { transform: translateX(4px); }
 
+        /* Footer CTA */
         .footer-cta {
             padding: 120px 40px 60px;
             text-align: center;
             background: var(--bg);
             position: relative;
             z-index: 1;
+        }
+        .footer-cta::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 200px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
         }
         .footer-cta h2 {
             font-family: 'Bebas Neue', sans-serif;
@@ -806,7 +901,7 @@
             align-items: center;
             gap: 10px;
             padding: 20px 48px;
-            background: var(--text);
+            background: var(--gold-gradient);
             color: var(--bg);
             text-decoration: none;
             font-size: 14px;
@@ -818,22 +913,11 @@
             position: relative;
             overflow: hidden;
         }
-        .footer-cta-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 0; height: 0;
-            background: var(--accent-dark);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s var(--transition-ease), height 0.6s var(--transition-ease);
+        .footer-cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(200,164,92,0.35);
         }
-        .footer-cta-btn:hover::before {
-            width: 350px; height: 350px;
-        }
-        .footer-cta-btn span {
-            position: relative; z-index: 1;
-        }
+        .footer-cta-btn span { position: relative; z-index: 1; }
 
         .footer-socials {
             display: flex;
@@ -842,24 +926,25 @@
             gap: 20px;
             margin-top: 60px;
             padding-top: 60px;
-            border-top: 1px solid rgba(0,0,0,0.08);
+            border-top: 1px solid rgba(200,164,92,0.1);
         }
         .footer-social-link {
             width: 56px; height: 56px;
-            border: 1px solid rgba(0,0,0,0.15);
+            border: 1px solid rgba(200,164,92,0.2);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            color: var(--text);
+            color: var(--gold);
             transition: all 0.3s var(--transition-ease);
         }
         .footer-social-link:hover {
-            border-color: var(--text);
-            background: var(--text);
+            border-color: var(--gold);
+            background: var(--gold-gradient);
             color: var(--bg);
             transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(200,164,92,0.25);
         }
         .footer-social-link svg {
             width: 22px; height: 22px;
@@ -872,19 +957,15 @@
             letter-spacing: 1px;
         }
 
+        /* Responsive */
         @media (max-width: 1024px) {
             .video-grid {
                 grid-template-columns: repeat(3, 1fr);
                 grid-auto-rows: 200px;
             }
             .video-card.size-2x2 { grid-column: span 2; grid-row: span 2; }
-            .about-grid {
-                grid-template-columns: 1fr;
-                gap: 60px;
-            }
-            .social-cards-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .about-grid { grid-template-columns: 1fr; gap: 60px; }
+            .social-cards-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
         @media (max-width: 768px) {
@@ -901,11 +982,9 @@
             .video-card.size-2x2 { grid-column: span 2; grid-row: span 1; }
             .video-card.size-1x2 { grid-row: span 1; }
             .capabilities-grid { grid-template-columns: 1fr; }
-            .social-cards-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
+            .social-cards-grid { grid-template-columns: 1fr; gap: 16px; }
             .custom-cursor, .cursor-dot { display: none; }
+            .cursor-glow { display: none; }
             .play-btn { width: 50px; height: 50px; }
             .modal-close { top: 12px; right: 12px; width: 44px; height: 44px; }
         }
@@ -928,9 +1007,11 @@
 <body>
 
     <div class="noise-overlay"></div>
+    <canvas class="film-grain"></canvas>
+    <div class="cursor-glow" id="cursorGlow"></div>
     <div class="custom-cursor" id="customCursor"></div>
     <div class="cursor-dot" id="cursorDot"></div>
-    <canvas id="particleCanvas"></canvas>
+    <canvas id="interactiveCanvas"></canvas>
 
     <div class="loader" id="loader">
         <div class="loader-film">
@@ -940,7 +1021,6 @@
         <div class="loader-bar"><div class="loader-bar-fill" id="loaderBarFill"></div></div>
     </div>
 
-    <!-- TRUE FULLSCREEN VIDEO MODAL -->
     <div class="video-modal" id="videoModal">
         <div class="modal-backdrop" id="modalBackdrop"></div>
         <div class="modal-content" id="modalContent">
@@ -976,10 +1056,11 @@
 
     <section class="hero" id="hero">
         <div class="hero-bg-grid"></div>
+        <div class="hero-vignette"></div>
         <div class="hero-content">
             <h1 class="hero-title" id="heroTitle">
-                <span class="line"><span>RPS</span></span>
-                <span class="line"><span>FILM STUDIO</span></span>
+                <span class="line"><span class="gold-text">RPS</span></span>
+                <span class="line"><span class="gold-text">FILM STUDIO</span></span>
             </h1>
             <p class="hero-tagline" id="heroTagline">Crafting cinematic stories that captivate, inspire, and push the boundaries of visual storytelling.</p>
             <a href="#showcase" class="hero-cta" id="heroCta">
@@ -999,7 +1080,7 @@
     <section class="section showcase" id="showcase">
         <div class="section-header reveal-up">
             <span class="section-label">Selected Works</span>
-            <h2 class="section-title">My Showcase</h2>
+            <h2 class="section-title"><span class="gold-text">My Showcase</span></h2>
             <div class="section-divider"></div>
         </div>
         <div class="video-grid" id="videoGrid"></div>
@@ -1009,7 +1090,7 @@
         <div class="about-grid">
             <div class="about-text reveal-up">
                 <span class="section-label">Who I Am</span>
-                <h3>Where Vision Meets<br>Cinematic Reality</h3>
+                <h3 class="gold-text">Where Vision Meets<br>Cinematic Reality</h3>
                 <p>I'm a creative filmmaker and digital artist specializing in cinematic storytelling, visual effects, and immersive content creation. I bring ideas to life through meticulous craft and innovative techniques.</p>
                 <p>From concept to final cut, every frame I create is designed to evoke emotion and leave a lasting impression on audiences.</p>
             </div>
@@ -1020,7 +1101,7 @@
     <section class="social-links-section" id="links">
         <div class="section-header reveal-up">
             <span class="section-label">Find Me Online</span>
-            <h2 class="section-title">My Channels</h2>
+            <h2 class="section-title"><span class="gold-text">My Channels</span></h2>
             <div class="section-divider"></div>
         </div>
         <div class="social-cards-grid" id="socialCardsGrid"></div>
@@ -1028,29 +1109,20 @@
 
     <section class="footer-cta" id="contact">
         <span class="section-label reveal-up">Start a Project</span>
-        <h2 class="reveal-up">Let's Build a<br>Universe Together</h2>
+        <h2 class="reveal-up"><span class="gold-text">Let's Build a<br>Universe Together</span></h2>
         <p class="reveal-up">Available for freelance projects, collaborations, and full-time roles.</p>
         <a href="mailto:rudhraingame@gmail.com" class="footer-cta-btn reveal-up">
             <span>Start a Conversation</span>
         </a>
         <div class="footer-socials reveal-up">
             <a href="mailto:rudhraingame@gmail.com" class="footer-social-link" aria-label="Email">
-                <svg viewBox="0 0 24 24">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                    <polyline points="22,6 12,13 2,6" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" fill="none" stroke="currentColor" stroke-width="1.5"/><polyline points="22,6 12,13 2,6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
             </a>
             <a href="https://www.linkedin.com/in/rudhra-s-ab3aba192/" target="_blank" rel="noopener noreferrer" class="footer-social-link" aria-label="LinkedIn">
-                <svg viewBox="0 0 24 24">
-                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                    <rect x="2" y="9" width="4" height="12" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                    <circle cx="4" cy="4" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
+                <svg viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="2" y="9" width="4" height="12" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="4" cy="4" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
             </a>
         </div>
-        <div class="footer-bottom reveal-up">
-            &copy; 2024 RPS Film Studio. All rights reserved.
-        </div>
+        <div class="footer-bottom reveal-up">&copy; 2024 RPS Film Studio. All rights reserved.</div>
     </section>
 
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
@@ -1079,27 +1151,9 @@
     ];
 
     const socialChannels = [
-        {
-            title: '3D Portfolio',
-            desc: 'Explore my collection of 3D artwork, environments, and digital sculptures.',
-            url: 'https://rudysen.github.io',
-            icon: 'portfolio',
-            label: 'View Portfolio'
-        },
-        {
-            title: 'AI Horror Channel',
-            desc: 'Vault-94 Horror — AI-generated horror content and psychological thrillers.',
-            url: 'https://www.youtube.com/@Vault-94-horror',
-            icon: 'horror',
-            label: 'Watch on YouTube'
-        },
-        {
-            title: 'AI Kids Channel',
-            desc: 'Pixxel Pogo — Creative AI-generated content for young audiences.',
-            url: 'https://www.youtube.com/@PixxelPogo',
-            icon: 'kids',
-            label: 'Watch on YouTube'
-        }
+        { title: '3D Portfolio', desc: 'Explore my collection of 3D artwork, environments, and digital sculptures.', url: 'https://rudysen.github.io', icon: 'portfolio', label: 'View Portfolio' },
+        { title: 'AI Horror Channel', desc: 'Vault-94 Horror — AI-generated horror content and psychological thrillers.', url: 'https://www.youtube.com/@Vault-94-horror', icon: 'horror', label: 'Watch on YouTube' },
+        { title: 'AI Kids Channel', desc: 'Pixxel Pogo — Creative AI-generated content for young audiences.', url: 'https://www.youtube.com/@PixxelPogo', icon: 'kids', label: 'Watch on YouTube' }
     ];
 
     const iconPaths = {
@@ -1130,8 +1184,15 @@
     // Cursor
     const cursorEl = document.getElementById('customCursor');
     const cursorDotEl = document.getElementById('cursorDot');
+    const cursorGlow = document.getElementById('cursorGlow');
     let mx = 0, my = 0, cx = 0, cy = 0;
-    document.addEventListener('mousemove', (e) => { mx = e.clientX; my = e.clientY; cursorDotEl.style.left = (mx-3)+'px'; cursorDotEl.style.top = (my-3)+'px'; });
+    document.addEventListener('mousemove', (e) => {
+        mx = e.clientX; my = e.clientY;
+        cursorDotEl.style.left = (mx-3)+'px';
+        cursorDotEl.style.top = (my-3)+'px';
+        cursorGlow.style.left = mx+'px';
+        cursorGlow.style.top = my+'px';
+    });
     function animateCursor() { cx += (mx-cx)*0.15; cy += (my-cy)*0.15; cursorEl.style.left = (cx-10)+'px'; cursorEl.style.top = (cy-10)+'px'; requestAnimationFrame(animateCursor); }
     animateCursor();
     document.querySelectorAll('.hero-cta, .footer-cta-btn, .nav-cta, .social-card, .footer-social-link, .video-card').forEach(el => {
@@ -1153,21 +1214,119 @@
         });
     });
 
-    // Particles
-    const pCanvas = document.getElementById('particleCanvas');
-    const pCtx = pCanvas.getContext('2d');
-    function resizeP() { pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight; }
-    resizeP(); window.addEventListener('resize', resizeP);
-    let pArr = [];
-    class P {
-        constructor() { this.reset(); }
-        reset() { this.x = Math.random()*pCanvas.width; this.y = Math.random()*pCanvas.height; this.s = Math.random()*2+0.5; this.vx = (Math.random()-0.5)*0.3; this.vy = (Math.random()-0.5)*0.2-0.1; this.o = Math.random()*0.5+0.1; this.fd = 1; this.fs = Math.random()*0.005+0.002; }
-        update() { this.x += this.vx; this.y += this.vy; this.o += this.fs*this.fd; if(this.o>=0.6) this.fd=-1; if(this.o<=0.05) this.fd=1; if(this.x<-10||this.x>pCanvas.width+10||this.y<-10||this.y>pCanvas.height+10){this.reset();this.y=pCanvas.height+10;} }
-        draw() { pCtx.beginPath(); pCtx.arc(this.x,this.y,this.s,0,Math.PI*2); pCtx.fillStyle=`rgba(26,26,26,${this.o})`; pCtx.fill(); }
+    // INTERACTIVE CANVAS - Particle system with cursor interaction
+    const iCanvas = document.getElementById('interactiveCanvas');
+    const iCtx = iCanvas.getContext('2d');
+    let particles = [];
+    let mouse = { x: -1000, y: -1000, radius: 150 };
+
+    function resizeICanvas() {
+        iCanvas.width = window.innerWidth;
+        iCanvas.height = window.innerHeight;
     }
-    for(let i=0;i<60;i++) pArr.push(new P());
-    function animP(){ pCtx.clearRect(0,0,pCanvas.width,pCanvas.height); pArr.forEach(p=>{p.update();p.draw();}); requestAnimationFrame(animP); }
-    animP();
+    resizeICanvas();
+    window.addEventListener('resize', resizeICanvas);
+
+    document.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+    });
+
+    class IParticle {
+        constructor() {
+            this.x = Math.random() * iCanvas.width;
+            this.y = Math.random() * iCanvas.height;
+            this.baseX = this.x;
+            this.baseY = this.y;
+            this.size = Math.random() * 2 + 0.5;
+            this.density = (Math.random() * 30) + 1;
+            this.color = Math.random() > 0.5 ? 'rgba(200,164,92,' : 'rgba(240,215,140,';
+            this.opacity = Math.random() * 0.5 + 0.1;
+            this.speedX = (Math.random() - 0.5) * 0.3;
+            this.speedY = (Math.random() - 0.5) * 0.2;
+        }
+        update() {
+            // Cursor interaction
+            let dx = mouse.x - this.x;
+            let dy = mouse.y - this.y;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+            let forceDirectionX = dx / dist;
+            let forceDirectionY = dy / dist;
+            let maxDist = mouse.radius;
+            let force = (maxDist - dist) / maxDist;
+            let directionX = forceDirectionX * force * this.density * 0.3;
+            let directionY = forceDirectionY * force * this.density * 0.3;
+
+            if (dist < maxDist) {
+                this.x -= directionX;
+                this.y -= directionY;
+                this.opacity = Math.min(0.8, this.opacity + 0.1);
+            } else {
+                // Return to base position
+                if (this.x !== this.baseX) {
+                    let dx2 = this.x - this.baseX;
+                    this.x -= dx2 / 20;
+                }
+                if (this.y !== this.baseY) {
+                    let dy2 = this.y - this.baseY;
+                    this.y -= dy2 / 20;
+                }
+                this.opacity = Math.max(0.1, this.opacity - 0.01);
+            }
+
+            // Gentle drift
+            this.baseX += this.speedX;
+            this.baseY += this.speedY;
+
+            if (this.baseX < -50) this.baseX = iCanvas.width + 50;
+            if (this.baseX > iCanvas.width + 50) this.baseX = -50;
+            if (this.baseY < -50) this.baseY = iCanvas.height + 50;
+            if (this.baseY > iCanvas.height + 50) this.baseY = -50;
+        }
+        draw() {
+            iCtx.beginPath();
+            iCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            iCtx.fillStyle = this.color + this.opacity + ')';
+            iCtx.fill();
+        }
+    }
+
+    function initParticles() {
+        particles = [];
+        let count = Math.min(120, Math.floor((iCanvas.width * iCanvas.height) / 12000));
+        for (let i = 0; i < count; i++) {
+            particles.push(new IParticle());
+        }
+    }
+    initParticles();
+    window.addEventListener('resize', initParticles);
+
+    // Draw connections between nearby particles
+    function connectParticles() {
+        for (let a = 0; a < particles.length; a++) {
+            for (let b = a + 1; b < particles.length; b++) {
+                let dx = particles[a].x - particles[b].x;
+                let dy = particles[a].y - particles[b].y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 100) {
+                    iCtx.beginPath();
+                    iCtx.strokeStyle = `rgba(200,164,92,${0.05 * (1 - dist / 100)})`;
+                    iCtx.lineWidth = 0.5;
+                    iCtx.moveTo(particles[a].x, particles[a].y);
+                    iCtx.lineTo(particles[b].x, particles[b].y);
+                    iCtx.stroke();
+                }
+            }
+        }
+    }
+
+    function animateInteractive() {
+        iCtx.clearRect(0, 0, iCanvas.width, iCanvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        connectParticles();
+        requestAnimationFrame(animateInteractive);
+    }
+    animateInteractive();
 
     // Navbar
     const navbar = document.getElementById('navbar');
@@ -1205,7 +1364,7 @@
         videoGrid.appendChild(card);
     });
 
-    // FULLSCREEN VIDEO MODAL
+    // Fullscreen video modal
     const videoModal = document.getElementById('videoModal');
     const videoPlayer = document.getElementById('videoPlayer');
     const modalClose = document.getElementById('modalClose');
@@ -1250,7 +1409,7 @@
         card.target = '_blank';
         card.rel = 'noopener noreferrer';
         card.innerHTML = `
-            <div class="social-card-icon" style="background:rgba(200,164,92,0.15);"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${iconPaths[ch.icon]}</svg></div>
+            <div class="social-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${iconPaths[ch.icon]}</svg></div>
             <h4>${ch.title}</h4><p>${ch.desc}</p>
             <div class="card-arrow"><span>${ch.label}</span><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>
         `;
