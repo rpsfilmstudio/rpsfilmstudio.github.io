@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>RPS Film Studio — Cinematic Production House</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/manrope@5.0.20/index.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/bebas-neue@5.0.21/index.min.css">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #ede5d0;
+            --bg-dark: #e4d9c0;
+            --text: #1a1a1a;
+            --text-light: #4a4a4a;
+            --accent: #c8a45c;
+            --accent-dark: #a07d3a;
+            --glass: rgba(237, 229, 208, 0.7);
+            --transition-ease: cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        html {
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 256px 256px;
+        }
+
+        #particleCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.35;
+        }
+
+        .custom-cursor {
+            position: fixed;
+            width: 20px; height: 20px;
+            border: 2px solid var(--text);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transition: transform 0.15s var(--transition-smooth),
+                        opacity 0.15s var(--transition-smooth),
+                        background-color 0.15s var(--transition-smooth);
+            mix-blend-mode: difference;
+        }
+        .custom-cursor.active {
+            transform: scale(2.5);
+            background-color: rgba(255,255,255,0.1);
+            border-color: white;
+        }
+        .cursor-dot {
+            position: fixed;
+            width: 6px; height: 6px;
+            background: var(--text);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10001;
+            mix-blend-mode: difference;
+        }
+
+        .loader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: var(--bg);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            transition: opacity 0.8s var(--transition-ease), visibility 0.8s var(--transition-ease);
+        }
+        .loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .loader-film {
+            width: 60px; height: 80px;
+            position: relative;
+            margin-bottom: 30px;
+        }
+        .loader-film .film-frame {
+            width: 60px; height: 80px;
+            border: 3px solid var(--text);
+            border-radius: 4px;
+            position: relative;
+            animation: filmFlicker 1.5s infinite;
+        }
+        .loader-film .film-frame::before,
+        .loader-film .film-frame::after {
+            content: '';
+            position: absolute;
+            width: 8px; height: 100%;
+            top: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                var(--text) 0px, var(--text) 6px,
+                transparent 6px, transparent 12px
+            );
+        }
+        .loader-film .film-frame::before { left: -14px; }
+        .loader-film .film-frame::after { right: -14px; }
+        .loader-film .film-reel {
+            position: absolute;
+            width: 20px; height: 20px;
+            border: 2px solid var(--text);
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation: reelSpin 1s linear infinite;
+        }
+        .loader-film .film-reel::before {
+            content: '';
+            position: absolute;
+            width: 6px; height: 6px;
+            background: var(--text);
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        @keyframes filmFlicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        @keyframes reelSpin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        .loader-text {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 14px;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            color: var(--text-light);
+        }
+        .loader-bar {
+            width: 120px; height: 2px;
+            background: rgba(0,0,0,0.1);
+            margin-top: 20px;
+            border-radius: 1px;
+            overflow: hidden;
+        }
+        .loader-bar-fill {
+            width: 0%; height: 100%;
+            background: var(--text);
+            transition: width 0.3s linear;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.5s var(--transition-ease);
+        }
+        .navbar.scrolled {
+            padding: 12px 40px;
+            background: var(--glass);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text);
+        }
+        .nav-logo img {
+            height: 40px;
+            width: auto;
+            transition: transform 0.3s var(--transition-ease);
+        }
+        .nav-logo:hover img {
+            transform: scale(1.05);
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 36px;
+            list-style: none;
+        }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            position: relative;
+            padding: 4px 0;
+        }
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 0%; height: 1px;
+            background: var(--text);
+            transition: width 0.4s var(--transition-ease);
+        }
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+        .nav-cta {
+            padding: 10px 24px;
+            background: var(--text);
+            color: var(--bg) !important;
+            border-radius: 100px;
+            font-size: 12px !important;
+            letter-spacing: 2px;
+            transition: all 0.3s var(--transition-ease);
+        }
+        .nav-cta::after { display: none !important; }
+        .nav-cta:hover {
+            background: var(--accent-dark);
+            transform: translateY(-2px);
+        }
+
+        .menu-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1001;
+        }
+        .menu-toggle span {
+            width: 28px; height: 2px;
+            background: var(--text);
+            transition: all 0.3s var(--transition-ease);
+            transform-origin: center;
+        }
+        .menu-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 6px);
+        }
+        .menu-toggle.active span:nth-child(2) { opacity: 0; }
+        .menu-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -6px);
+        }
+        .mobile-menu {
+            position: fixed;
+            top: 0; right: -100%;
+            width: 100%; height: 100vh;
+            background: var(--bg);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            transition: right 0.5s var(--transition-ease);
+        }
+        .mobile-menu.active { right: 0; }
+        .mobile-menu a {
+            text-decoration: none;
+            color: var(--text);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 42px;
+            letter-spacing: 4px;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        .mobile-menu.active a {
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.5s var(--transition-ease);
+        }
+        .mobile-menu a:nth-child(1) { transition-delay: 0.1s; }
+        .mobile-menu a:nth-child(2) { transition-delay: 0.2s; }
+        .mobile-menu a:nth-child(3) { transition-delay: 0.3s; }
+
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 120px 40px 80px;
+            overflow: hidden;
+        }
+        .hero-bg-grid {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image:
+                linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+            background-size: 80px 80px;
+            z-index: 0;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 1200px;
+        }
+        .hero-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(56px, 11vw, 160px);
+            line-height: 0.9;
+            letter-spacing: -2px;
+            margin-bottom: 24px;
+        }
+        .hero-title .line {
+            display: block;
+            overflow: hidden;
+        }
+        .hero-title .line span {
+            display: inline-block;
+            transform: translateY(110%);
+            opacity: 0;
+        }
+        .hero-tagline {
+            font-size: clamp(16px, 2vw, 22px);
+            color: var(--text-light);
+            font-weight: 300;
+            max-width: 600px;
+            margin: 0 auto 50px;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 40px;
+            background: var(--text);
+            color: var(--bg);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            border-radius: 100px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.4s var(--transition-ease);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-cta::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 0; height: 0;
+            background: var(--accent-dark);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s var(--transition-ease), height 0.6s var(--transition-ease);
+        }
+        .hero-cta:hover::before {
+            width: 300px; height: 300px;
+        }
+        .hero-cta span {
+            position: relative; z-index: 1;
+        }
+        .hero-cta .arrow {
+            position: relative; z-index: 1;
+            transition: transform 0.3s var(--transition-ease);
+        }
+        .hero-cta:hover .arrow { transform: translateX(6px); }
+
+        .hero-scroll-indicator {
+            position: absolute;
+            bottom: 40px; left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+        }
+        .hero-scroll-indicator .mouse {
+            width: 24px; height: 38px;
+            border: 2px solid var(--text);
+            border-radius: 12px;
+            position: relative;
+        }
+        .hero-scroll-indicator .mouse::before {
+            content: '';
+            position: absolute;
+            top: 6px; left: 50%;
+            transform: translateX(-50%);
+            width: 3px; height: 8px;
+            background: var(--text);
+            border-radius: 2px;
+            animation: scrollWheel 2s infinite;
+        }
+        @keyframes scrollWheel {
+            0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(14px); }
+        }
+        .hero-scroll-indicator span {
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--text-light);
+        }
+
+        .section {
+            position: relative;
+            z-index: 1;
+            padding: 100px 40px;
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .section-label {
+            font-size: 12px;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: var(--accent-dark);
+            margin-bottom: 16px;
+            display: block;
+        }
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(36px, 5vw, 72px);
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+        .section-divider {
+            width: 60px; height: 2px;
+            background: var(--text);
+            margin: 24px auto 0;
+        }
+
+        .showcase {
+            background: var(--bg-dark);
+        }
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-auto-rows: 220px;
+            gap: 10px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .video-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            background: #1a1a1a;
+            opacity: 0;
+            transform: translateY(40px) scale(0.96);
+        }
+        .video-card.size-2x2 {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+        .video-card.size-2x1 {
+            grid-column: span 2;
+            grid-row: span 1;
+        }
+        .video-card.size-1x2 {
+            grid-column: span 1;
+            grid-row: span 2;
+        }
+        .video-card .thumbnail {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s var(--transition-ease), filter 0.6s var(--transition-ease);
+        }
+        .video-card:hover .thumbnail {
+            transform: scale(1.06);
+            filter: brightness(0.55);
+        }
+        .video-card .play-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.4s var(--transition-ease);
+        }
+        .video-card:hover .play-overlay { opacity: 1; }
+        .play-btn {
+            width: 64px; height: 64px;
+            border: 2px solid white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s var(--transition-ease);
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.12);
+        }
+        .video-card:hover .play-btn { transform: scale(1.1); }
+        .play-btn svg {
+            width: 22px; height: 22px;
+            fill: white;
+            margin-left: 3px;
+        }
+        .video-card .card-info {
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 100%;
+            padding: 40px 18px 16px;
+            background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+            transform: translateY(100%);
+            transition: transform 0.4s var(--transition-ease);
+        }
+        .video-card:hover .card-info { transform: translateY(0); }
+        .card-info h3 {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        .card-info p {
+            color: rgba(255,255,255,0.55);
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .video-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.5s var(--transition-ease);
+        }
+        .video-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .video-modal .modal-backdrop {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92);
+            backdrop-filter: blur(20px);
+        }
+        .modal-content {
+            position: relative;
+            z-index: 1;
+            width: 90%;
+            max-width: 1100px;
+            aspect-ratio: 16/9;
+            transform: scale(0.9) translateY(30px);
+            transition: transform 0.5s var(--transition-ease);
+        }
+        .video-modal.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+        .modal-content iframe {
+            width: 100%; height: 100%;
+            border: none;
+            border-radius: 12px;
+        }
+        .modal-close {
+            position: absolute;
+            top: -50px; right: 0;
+            width: 44px; height: 44px;
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s var(--transition-ease);
+        }
+        .modal-close:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: white;
+        }
+        .modal-close svg {
+            width: 18px; height: 18px;
+            stroke: white;
+            stroke-width: 2;
+        }
+
+        .about { background: var(--bg); }
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            max-width: 1200px;
+            margin: 0 auto;
+            align-items: center;
+        }
+        .about-text h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(32px, 4vw, 56px);
+            line-height: 1.1;
+            margin-bottom: 24px;
+        }
+        .about-text p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+        .capabilities-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .capability-card {
+            padding: 24px 20px;
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 14px;
+            transition: all 0.4s var(--transition-ease);
+            opacity: 0;
+            transform: translateY(30px);
+            background: var(--bg);
+        }
+        .capability-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.06);
+        }
+        .capability-icon {
+            width: 44px; height: 44px;
+            background: var(--text);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 14px;
+        }
+        .capability-icon svg {
+            width: 22px; height: 22px;
+            stroke: var(--bg);
+            stroke-width: 1.5;
+            fill: none;
+        }
+        .capability-card h4 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .capability-card p {
+            font-size: 13px;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        /* Social Links Section */
+        .social-links-section {
+            background: var(--text);
+            color: var(--bg);
+            padding: 100px 40px;
+        }
+        .social-links-section .section-header {
+            margin-bottom: 60px;
+        }
+        .social-links-section .section-label {
+            color: var(--accent);
+        }
+        .social-links-section .section-title {
+            color: var(--bg);
+        }
+        .social-links-section .section-divider {
+            background: var(--bg);
+        }
+        .social-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .social-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-decoration: none;
+            color: var(--bg);
+            transition: all 0.4s var(--transition-ease);
+            opacity: 0;
+            transform: translateY(40px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 16px;
+        }
+        .social-card:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--accent);
+            transform: translateY(-6px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+        .social-card-icon {
+            width: 64px; height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        .social-card-icon svg {
+            width: 30px; height: 30px;
+            fill: var(--bg);
+        }
+        .social-card h4 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 22px;
+            letter-spacing: 2px;
+        }
+        .social-card p {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.6;
+        }
+        .social-card .card-arrow {
+            margin-top: auto;
+            padding-top: 20px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .social-card .card-arrow svg {
+            width: 16px; height: 16px;
+            stroke: var(--accent);
+            stroke-width: 2;
+            fill: none;
+            transition: transform 0.3s var(--transition-ease);
+        }
+        .social-card:hover .card-arrow svg {
+            transform: translateX(4px);
+        }
+
+        .footer-cta {
+            padding: 120px 40px 60px;
+            text-align: center;
+            background: var(--bg);
+            position: relative;
+            z-index: 1;
+        }
+        .footer-cta h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(36px, 6vw, 80px);
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+        .footer-cta p {
+            font-size: 18px;
+            color: var(--text-light);
+            margin-bottom: 50px;
+            max-width: 560px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+        .footer-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 20px 48px;
+            background: var(--text);
+            color: var(--bg);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            border-radius: 100px;
+            transition: all 0.4s var(--transition-ease);
+            position: relative;
+            overflow: hidden;
+        }
+        .footer-cta-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 0; height: 0;
+            background: var(--accent-dark);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s var(--transition-ease), height 0.6s var(--transition-ease);
+        }
+        .footer-cta-btn:hover::before {
+            width: 350px; height: 350px;
+        }
+        .footer-cta-btn span {
+            position: relative; z-index: 1;
+        }
+
+        .footer-socials {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 60px;
+            padding-top: 60px;
+            border-top: 1px solid rgba(0,0,0,0.08);
+        }
+        .footer-social-link {
+            width: 56px; height: 56px;
+            border: 1px solid rgba(0,0,0,0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.3s var(--transition-ease);
+        }
+        .footer-social-link:hover {
+            border-color: var(--text);
+            background: var(--text);
+            color: var(--bg);
+            transform: translateY(-4px);
+        }
+        .footer-social-link svg {
+            width: 22px; height: 22px;
+            fill: currentColor;
+        }
+        .footer-bottom {
+            margin-top: 40px;
+            font-size: 12px;
+            color: var(--text-light);
+            letter-spacing: 1px;
+        }
+
+        @media (max-width: 1024px) {
+            .video-grid {
+                grid-template-columns: repeat(3, 1fr);
+                grid-auto-rows: 200px;
+            }
+            .video-card.size-2x2 { grid-column: span 2; grid-row: span 2; }
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+            .social-cards-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 16px 24px; }
+            .nav-links { display: none; }
+            .menu-toggle { display: flex; }
+            .section { padding: 80px 24px; }
+            .hero { padding: 100px 24px 80px; }
+            .video-grid {
+                grid-template-columns: repeat(2, 1fr);
+                grid-auto-rows: 180px;
+                gap: 8px;
+            }
+            .video-card.size-2x2 { grid-column: span 2; grid-row: span 1; }
+            .video-card.size-1x2 { grid-row: span 1; }
+            .capabilities-grid { grid-template-columns: 1fr; }
+            .social-cards-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .custom-cursor, .cursor-dot { display: none; }
+            .play-btn { width: 50px; height: 50px; }
+            .modal-content { width: 95%; }
+            .modal-close { top: -44px; }
+        }
+
+        @media (max-width: 480px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+                grid-auto-rows: 200px;
+            }
+            .video-card.size-2x2 { grid-column: span 1; }
+            .video-card.size-2x1 { grid-column: span 1; }
+        }
+
+        .reveal-up {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="noise-overlay"></div>
+    <div class="custom-cursor" id="customCursor"></div>
+    <div class="cursor-dot" id="cursorDot"></div>
+    <canvas id="particleCanvas"></canvas>
+
+    <div class="loader" id="loader">
+        <div class="loader-film">
+            <div class="film-frame"><div class="film-reel"></div></div>
+        </div>
+        <div class="loader-text">Loading Experience</div>
+        <div class="loader-bar"><div class="loader-bar-fill" id="loaderBarFill"></div></div>
+    </div>
+
+    <div class="video-modal" id="videoModal">
+        <div class="modal-backdrop" id="modalBackdrop"></div>
+        <div class="modal-content" id="modalContent">
+            <button class="modal-close" id="modalClose" aria-label="Close">
+                <svg viewBox="0 0 24 24" fill="none">
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                </svg>
+            </button>
+            <div id="videoPlayer"></div>
+        </div>
+    </div>
+
+    <nav class="navbar" id="navbar">
+        <a href="#" class="nav-logo">
+            <img src="https://image.qwenlm.ai/public_source/90cdbfa8-eeb4-4c2d-9b96-7d632de2cc47/1b4640a35-4eb8-4016-8a99-f7ef60bee544.png" alt="RPS Film Studio" />
+        </a>
+        <ul class="nav-links">
+            <li><a href="#showcase">Showcase</a></li>
+            <li><a href="#about">About</a></li>
+            <li><a href="#contact" class="nav-cta">Get in Touch</a></li>
+        </ul>
+        <div class="menu-toggle" id="menuToggle">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#showcase">Showcase</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+    </div>
+
+    <section class="hero" id="hero">
+        <div class="hero-bg-grid"></div>
+        <div class="hero-content">
+            <h1 class="hero-title" id="heroTitle">
+                <span class="line"><span>RPS</span></span>
+                <span class="line"><span>FILM STUDIO</span></span>
+            </h1>
+            <p class="hero-tagline" id="heroTagline">Crafting cinematic stories that captivate, inspire, and push the boundaries of visual storytelling.</p>
+            <a href="#showcase" class="hero-cta" id="heroCta">
+                <span>View My Work</span>
+                <svg class="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                    <polyline points="12 5 19 12 12 19"/>
+                </svg>
+            </a>
+        </div>
+        <div class="hero-scroll-indicator" id="scrollIndicator">
+            <div class="mouse"></div>
+            <span>Scroll</span>
+        </div>
+    </section>
+
+    <section class="section showcase" id="showcase">
+        <div class="section-header reveal-up">
+            <span class="section-label">Selected Works</span>
+            <h2 class="section-title">My Showcase</h2>
+            <div class="section-divider"></div>
+        </div>
+        <div class="video-grid" id="videoGrid"></div>
+    </section>
+
+    <section class="section about" id="about">
+        <div class="about-grid">
+            <div class="about-text reveal-up">
+                <span class="section-label">Who I Am</span>
+                <h3>Where Vision Meets<br>Cinematic Reality</h3>
+                <p>I'm a creative filmmaker and digital artist specializing in cinematic storytelling, visual effects, and immersive content creation. I bring ideas to life through meticulous craft and innovative techniques.</p>
+                <p>From concept to final cut, every frame I create is designed to evoke emotion and leave a lasting impression on audiences.</p>
+            </div>
+            <div class="capabilities-grid" id="capabilitiesGrid"></div>
+        </div>
+    </section>
+
+    <!-- Social Links Section -->
+    <section class="social-links-section" id="links">
+        <div class="section-header reveal-up">
+            <span class="section-label">Find Me Online</span>
+            <h2 class="section-title">My Channels</h2>
+            <div class="section-divider"></div>
+        </div>
+        <div class="social-cards-grid" id="socialCardsGrid"></div>
+    </section>
+
+    <section class="footer-cta" id="contact">
+        <span class="section-label reveal-up">Start a Project</span>
+        <h2 class="reveal-up">Let's Build a<br>Universe Together</h2>
+        <p class="reveal-up">Available for freelance projects, collaborations, and full-time roles.</p>
+        <a href="mailto:rudhraingame@gmail.com" class="footer-cta-btn reveal-up">
+            <span>Start a Conversation</span>
+        </a>
+        <div class="footer-socials reveal-up">
+            <a href="mailto:rudhraingame@gmail.com" class="footer-social-link" aria-label="Email">
+                <svg viewBox="0 0 24 24">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                    <polyline points="22,6 12,13 2,6" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </a>
+            <a href="https://www.linkedin.com/in/rudhra-s-ab3aba192/" target="_blank" rel="noopener noreferrer" class="footer-social-link" aria-label="LinkedIn">
+                <svg viewBox="0 0 24 24">
+                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                    <rect x="2" y="9" width="4" height="12" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                    <circle cx="4" cy="4" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+            </a>
+        </div>
+        <div class="footer-bottom reveal-up">
+            &copy; 2024 RPS Film Studio. All rights reserved.
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+
+    <script>
+    /* ============================================
+       DATA
+       ============================================ */
+    const videos = [
+        { id: 'guuKxslbK7w', title: 'This Classified Leak Explains Everything', category: 'Mystery / Thriller', size: '2x2' },
+        { id: 'p2IAZWta9X4', title: 'Classified Leak — The Untold Story', category: 'Mysterious / Scary', size: '1x2' },
+        { id: 'CVHXr7d2IJE', title: 'Jenna Alive — What Happened', category: 'Drama / Mystery', size: '2x1' },
+        { id: '5TfLbMO2V7g', title: 'The Cabin Goes Wrong', category: 'Stop Motion Thriller', size: '1x1' },
+        { id: '7RxS8lu7NUM', title: 'Pixxel Is Missing People?', category: 'Mystery / Investigation', size: '1x1' },
+        { id: 'fVQIzMV0XVU', title: 'Meet Our Anchor Luna', category: 'Character / Narrative', size: '2x1' },
+        { id: '29w7TT5lXy8', title: 'Pixxel Needs Purpose', category: 'Abstract / Conceptual', size: '1x2' },
+        { id: 'Llh6JFOncCA', title: 'Playing Together Is Our Favourite Rule', category: 'Emotional / Narrative', size: '2x1' },
+        { id: '5d-eG_PK6dE', title: 'Banana Song', category: 'Musical / Whimsical', size: '2x1' }
+    ];
+
+    const capabilities = [
+        { icon: 'cube', title: '3D Art', desc: 'Sculpting and designing immersive three-dimensional worlds and assets.' },
+        { icon: 'film', title: 'Film Production', desc: 'Traditional and AI-powered film production from concept to final delivery.' },
+        { icon: 'play', title: 'Animation', desc: 'Traditional and AI animation techniques that bring characters to life.' },
+        { icon: 'image', title: 'Image Generation', desc: '3D and AI-driven image creation for cinematic and editorial use.' },
+        { icon: 'users', title: 'Character Creation', desc: '3D and AI character design, rigging, and digital performance.' }
+    ];
+
+    const socialChannels = [
+        {
+            title: '3D Portfolio',
+            desc: 'Explore my collection of 3D artwork, environments, and digital sculptures.',
+            url: 'https://rudysen.github.io',
+            icon: 'portfolio',
+            label: 'View Portfolio'
+        },
+        {
+            title: 'AI Horror Channel',
+            desc: 'Vault-94 Horror — AI-generated horror content and psychological thrillers.',
+            url: 'https://www.youtube.com/@Vault-94-horror',
+            icon: 'horror',
+            label: 'Watch on YouTube'
+        },
+        {
+            title: 'AI Kids Channel',
+            desc: 'Pixxel Pogo — Creative AI-generated content for young audiences.',
+            url: 'https://www.youtube.com/@PixxelPogo',
+            icon: 'kids',
+            label: 'Watch on YouTube'
+        }
+    ];
+
+    const iconPaths = {
+        cube: '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+        film: '<polyline points="15 10 19 10 22 15 19 20 15 20"/><rect x="2" y="7" width="13" height="13" rx="2" ry="2"/><path d="M5 7V5a2 2 0 0 1 2-2h6"/>',
+        play: '<polygon points="5 3 19 12 5 21 5 3"/>',
+        image: '<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
+        users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+        portfolio: '<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>',
+        horror: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+        kids: '<circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>'
+    };
+
+    /* ============================================
+       LOADER
+       ============================================ */
+    let loadProgress = 0;
+    const loaderBar = document.getElementById('loaderBarFill');
+    const loaderEl = document.getElementById('loader');
+
+    const loadInterval = setInterval(() => {
+        loadProgress += Math.random() * 15 + 5;
+        if (loadProgress >= 100) {
+            loadProgress = 100;
+            clearInterval(loadInterval);
+            setTimeout(() => {
+                loaderEl.classList.add('hidden');
+                initAnimations();
+            }, 400);
+        }
+        loaderBar.style.width = loadProgress + '%';
+    }, 200);
+
+    /* ============================================
+       CURSOR
+       ============================================ */
+    const cursorEl = document.getElementById('customCursor');
+    const cursorDotEl = document.getElementById('cursorDot');
+    let mouseXPos = 0, mouseYPos = 0;
+    let cursorXPos = 0, cursorYPos = 0;
+
+    document.addEventListener('mousemove', (e) => {
+        mouseXPos = e.clientX;
+        mouseYPos = e.clientY;
+        cursorDotEl.style.left = (mouseXPos - 3) + 'px';
+        cursorDotEl.style.top = (mouseYPos - 3) + 'px';
+    });
+
+    function animateCursor() {
+        cursorXPos += (mouseXPos - cursorXPos) * 0.15;
+        cursorYPos += (mouseYPos - cursorYPos) * 0.15;
+        cursorEl.style.left = (cursorXPos - 10) + 'px';
+        cursorEl.style.top = (cursorYPos - 10) + 'px';
+        requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    document.querySelectorAll('.hero-cta, .footer-cta-btn, .nav-cta, .social-card, .footer-social-link, .video-card').forEach(el => {
+        el.addEventListener('mouseenter', () => cursorEl.classList.add('active'));
+        el.addEventListener('mouseleave', () => cursorEl.classList.remove('active'));
+    });
+
+    /* ============================================
+       LENIS SMOOTH SCROLL
+       ============================================ */
+    const lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        smooth: true,
+        smoothTouch: false
+    });
+    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+    requestAnimationFrame(raf);
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) lenis.scrollTo(target, { offset: -80 });
+            mobileMenu.classList.remove('active');
+            menuToggle.classList.remove('active');
+        });
+    });
+
+    /* ============================================
+       PARTICLES
+       ============================================ */
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    class Particle {
+        constructor() { this.reset(); }
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+            this.size = Math.random() * 2 + 0.5;
+            this.speedX = (Math.random() - 0.5) * 0.3;
+            this.speedY = (Math.random() - 0.5) * 0.2 - 0.1;
+            this.opacity = Math.random() * 0.5 + 0.1;
+            this.fadeDir = 1;
+            this.fadeSpeed = Math.random() * 0.005 + 0.002;
+        }
+        update() {
+            this.x += this.speedX;
+            this.y += this.speedY;
+            this.opacity += this.fadeSpeed * this.fadeDir;
+            if (this.opacity >= 0.6) this.fadeDir = -1;
+            if (this.opacity <= 0.05) this.fadeDir = 1;
+            if (this.x < -10 || this.x > canvas.width + 10 || this.y < -10 || this.y > canvas.height + 10) {
+                this.reset();
+                this.y = canvas.height + 10;
+            }
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(26,26,26,${this.opacity})`;
+            ctx.fill();
+        }
+    }
+    for (let i = 0; i < 60; i++) particles.push(new Particle());
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        requestAnimationFrame(animateParticles);
+    }
+    animateParticles();
+
+    /* ============================================
+       NAVBAR
+       ============================================ */
+    const navbar = document.getElementById('navbar');
+    lenis.on('scroll', ({ scroll }) => {
+        navbar.classList.toggle('scrolled', scroll > 100);
+    });
+
+    /* ============================================
+       MOBILE MENU
+       ============================================ */
+    const menuToggle = document.getElementById('menuToggle');
+    const mobileMenu = document.getElementById('mobileMenu');
+    menuToggle.addEventListener('click', () => {
+        menuToggle.classList.toggle('active');
+        mobileMenu.classList.toggle('active');
+    });
+    document.querySelectorAll('.mobile-menu a').forEach(link => {
+        link.addEventListener('click', () => {
+            menuToggle.classList.remove('active');
+            mobileMenu.classList.remove('active');
+        });
+    });
+
+    /* ============================================
+       BUILD VIDEO GRID
+       ============================================ */
+    const videoGrid = document.getElementById('videoGrid');
+
+    videos.forEach((vid, idx) => {
+        const card = document.createElement('div');
+        card.className = `video-card size-${vid.size}`;
+        const thumbFallback = `https://img.youtube.com/vi/${vid.id}/hqdefault.jpg`;
+        card.innerHTML = `
+            <img class="thumbnail" src="${thumbFallback}" alt="${vid.title}" loading="lazy" />
+            <div class="play-overlay">
+                <div class="play-btn">
+                    <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+                </div>
+            </div>
+            <div class="card-info">
+                <h3>${vid.title}</h3>
+                <p>${vid.category}</p>
+            </div>
+        `;
+        card.addEventListener('mouseenter', function() {
+            const img = this.querySelector('.thumbnail');
+            if (!img.dataset.triedMax) {
+                img.dataset.triedMax = 'true';
+                const testImg = new Image();
+                testImg.onload = () => { img.src = `https://img.youtube.com/vi/${vid.id}/maxresdefault.jpg`; };
+                testImg.src = `https://img.youtube.com/vi/${vid.id}/maxresdefault.jpg`;
+            }
+        }, { once: true });
+        card.addEventListener('click', () => openVideoModal(vid.id));
+        videoGrid.appendChild(card);
+    });
+
+    /* ============================================
+       VIDEO MODAL
+       ============================================ */
+    const videoModal = document.getElementById('videoModal');
+    const videoPlayer = document.getElementById('videoPlayer');
+    const modalClose = document.getElementById('modalClose');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+
+    function openVideoModal(videoId) {
+        const originUrl = window.location.origin;
+        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&origin=${encodeURIComponent(originUrl)}`;
+        videoPlayer.innerHTML = `<iframe src="${embedUrl}" referrerpolicy="strict-origin-when-cross-origin" allow="autoplay; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:none;border-radius:12px;"></iframe>`;
+        videoModal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeVideoModal() {
+        videoModal.classList.remove('active');
+        document.body.style.overflow = '';
+        setTimeout(() => { videoPlayer.innerHTML = ''; }, 500);
+    }
+
+    modalClose.addEventListener('click', closeVideoModal);
+    modalBackdrop.addEventListener('click', closeVideoModal);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeVideoModal(); });
+
+    /* ============================================
+       BUILD CAPABILITIES
+       ============================================ */
+    const capabilitiesGrid = document.getElementById('capabilitiesGrid');
+    capabilities.forEach((cap) => {
+        const card = document.createElement('div');
+        card.className = 'capability-card';
+        card.innerHTML = `
+            <div class="capability-icon">
+                <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${iconPaths[cap.icon]}</svg>
+            </div>
+            <h4>${cap.title}</h4>
+            <p>${cap.desc}</p>
+        `;
+        capabilitiesGrid.appendChild(card);
+    });
+
+    /* ============================================
+       BUILD SOCIAL CARDS
+       ============================================ */
+    const socialCardsGrid = document.getElementById('socialCardsGrid');
+    socialChannels.forEach((ch) => {
+        const card = document.createElement('a');
+        card.className = 'social-card';
+        card.href = ch.url;
+        card.target = '_blank';
+        card.rel = 'noopener noreferrer';
+        card.innerHTML = `
+            <div class="social-card-icon" style="background: rgba(200,164,92,0.15);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">${iconPaths[ch.icon]}</svg>
+            </div>
+            <h4>${ch.title}</h4>
+            <p>${ch.desc}</p>
+            <div class="card-arrow">
+                <span>${ch.label}</span>
+                <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+        `;
+        socialCardsGrid.appendChild(card);
+    });
+
+    /* ============================================
+       GSAP ANIMATIONS
+       ============================================ */
+    gsap.registerPlugin(ScrollTrigger);
+
+    function initAnimations() {
+        gsap.utils.toArray('.hero-title .line span').forEach((span, i) => {
+            gsap.to(span, {
+                y: 0, opacity: 1,
+                duration: 1, ease: 'power4.out',
+                delay: 0.3 + i * 0.15
+            });
+        });
+
+        gsap.to('#heroTagline', {
+            y: 0, opacity: 1,
+            duration: 0.8, ease: 'power3.out', delay: 0.9
+        });
+
+        gsap.to('#heroCta', {
+            y: 0, opacity: 1,
+            duration: 0.8, ease: 'power3.out', delay: 1.1
+        });
+
+        gsap.to('#scrollIndicator', {
+            opacity: 1,
+            duration: 0.8, ease: 'power3.out', delay: 1.4
+        });
+
+        gsap.utils.toArray('.video-card').forEach((card, i) => {
+            gsap.to(card, {
+                opacity: 1, y: 0, scale: 1,
+                duration: 0.7, ease: 'power3.out',
+                scrollTrigger: {
+                    trigger: card,
+                    start: 'top 90%',
+                    toggleActions: 'play none none reverse'
+                },
+                delay: i * 0.06
+            });
+        });
+
+        gsap.utils.toArray('.capability-card').forEach((card, i) => {
+            gsap.to(card, {
+                opacity: 1, y: 0,
+                duration: 0.7, ease: 'power3.out',
+                scrollTrigger: {
+                    trigger: card,
+                    start: 'top 88%',
+                    toggleActions: 'play none none reverse'
+                },
+                delay: i * 0.1
+            });
+        });
+
+        gsap.utils.toArray('.social-card').forEach((card, i) => {
+            gsap.to(card, {
+                opacity: 1, y: 0,
+                duration: 0.7, ease: 'power3.out',
+                scrollTrigger: {
+                    trigger: card,
+                    start: 'top 88%',
+                    toggleActions: 'play none none reverse'
+                },
+                delay: i * 0.15
+            });
+        });
+
+        gsap.utils.toArray('.reveal-up').forEach(el => {
+            gsap.to(el, {
+                opacity: 1, y: 0,
+                duration: 0.8, ease: 'power3.out',
+                scrollTrigger: {
+                    trigger: el,
+                    start: 'top 88%',
+                    toggleActions: 'play none none reverse'
+                }
+            });
+        });
+
+        gsap.to('.hero-bg-grid', {
+            y: 200, ease: 'none',
+            scrollTrigger: {
+                trigger: '.hero',
+                start: 'top top',
+                end: 'bottom top',
+                scrub: 1
+            }
+        });
+    }
+
+    /* ============================================
+       MAGNETIC HOVER
+       ============================================ */
+    document.querySelectorAll('.hero-cta, .footer-cta-btn').forEach(btn => {
+        btn.addEventListener('mousemove', (e) => {
+            const rect = btn.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            btn.style.transform = `translate(${x * 0.2}px, ${y * 0.2}px)`;
+        });
+        btn.addEventListener('mouseleave', () => {
+            btn.style.transform = 'translate(0, 0)';
+        });
+    });
+    </script>
+</body>
+</html>
+
