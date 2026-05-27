@@ -554,6 +554,7 @@
             text-transform: uppercase;
         }
 
+        /* ===== FULL-SCREEN VIDEO MODAL ===== */
         .video-modal {
             position: fixed;
             top: 0; left: 0;
@@ -565,6 +566,7 @@
             opacity: 0;
             visibility: hidden;
             transition: all 0.5s var(--transition-ease);
+            padding: 40px;
         }
         .video-modal.active {
             opacity: 1;
@@ -574,45 +576,49 @@
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: rgba(0,0,0,0.92);
-            backdrop-filter: blur(20px);
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(30px);
         }
         .modal-content {
             position: relative;
             z-index: 1;
-            width: 90%;
-            max-width: 1100px;
-            aspect-ratio: 16/9;
-            transform: scale(0.9) translateY(30px);
+            width: 95vw;
+            max-width: 1600px;
+            height: 85vh;
+            max-height: 900px;
+            transform: scale(0.92) translateY(20px);
             transition: transform 0.5s var(--transition-ease);
         }
         .video-modal.active .modal-content {
             transform: scale(1) translateY(0);
         }
         .modal-content iframe {
-            width: 100%; height: 100%;
+            width: 100%;
+            height: 100%;
             border: none;
             border-radius: 12px;
         }
         .modal-close {
             position: absolute;
-            top: -50px; right: 0;
-            width: 44px; height: 44px;
-            border: 1px solid rgba(255,255,255,0.3);
+            top: -56px;
+            right: 0;
+            width: 48px; height: 48px;
+            border: 1px solid rgba(255,255,255,0.25);
             border-radius: 50%;
-            background: transparent;
+            background: rgba(255,255,255,0.05);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s var(--transition-ease);
+            z-index: 2;
         }
         .modal-close:hover {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.15);
             border-color: white;
         }
         .modal-close svg {
-            width: 18px; height: 18px;
+            width: 20px; height: 20px;
             stroke: white;
             stroke-width: 2;
         }
@@ -683,7 +689,6 @@
             line-height: 1.5;
         }
 
-        /* Social Links Section */
         .social-links-section {
             background: var(--text);
             color: var(--bg);
@@ -902,7 +907,12 @@
             }
             .custom-cursor, .cursor-dot { display: none; }
             .play-btn { width: 50px; height: 50px; }
-            .modal-content { width: 95%; }
+            .video-modal { padding: 16px; }
+            .modal-content {
+                width: 100vw;
+                height: 70vh;
+                max-height: none;
+            }
             .modal-close { top: -44px; }
         }
 
@@ -1012,7 +1022,6 @@
         </div>
     </section>
 
-    <!-- Social Links Section -->
     <section class="social-links-section" id="links">
         <div class="section-header reveal-up">
             <span class="section-label">Find Me Online</span>
@@ -1294,7 +1303,7 @@
     });
 
     /* ============================================
-       VIDEO MODAL
+       VIDEO MODAL — LARGE / NEAR FULL-SCREEN
        ============================================ */
     const videoModal = document.getElementById('videoModal');
     const videoPlayer = document.getElementById('videoPlayer');
