@@ -1,10 +1,15 @@
 {
   "videos": [
     {
+      "id": "5uKGF2SZjFM",
+      "title": "Midnight",
+      "category": "Music Video",
+      "featured": true
+    },
+    {
       "id": "guuKxslbK7w",
       "title": "The Silent Green",
-      "category": "Horror",
-      "featured": true
+      "category": "Micro Drama"
     },
     {
       "id": "p2IAZWta9X4",

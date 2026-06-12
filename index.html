@@ -421,6 +421,15 @@ html.anim .reveal{opacity:0;transform:translateY(46px)}
   flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
   padding:5px 10px;border:1px solid currentColor;
 }
+.strip-empty{
+  flex:1;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  border:1.5px dashed var(--line-strong);color:var(--muted);
+  font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+  text-align:center;padding:30px;
+}
+.strip-empty .se-k{
+  font-family:'Archivo Black',sans-serif;font-size:1.4rem;letter-spacing:.04em;color:var(--ink);
+}
 .strip-hint{
   margin-top:18px;display:flex;align-items:center;gap:12px;justify-content:flex-end;
   font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);
@@ -867,13 +876,21 @@ const icons = {
   users: '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
 };
 
-/* category colors — known cats fixed, new ones auto-assigned from ramp */
-const KNOWN_CAT_COLORS = { horror: '#d4624a', kids: '#56a87c' };
-const CAT_RAMP = ['#c79a3b', '#6f93c4', '#b873aa', '#56a8ad', '#8d83d6', '#cd8440'];
+/* canonical tab order — these always show, even before their first video lands.
+   Categories found in gallery.json that aren't listed here get appended after. */
+const CATEGORY_ORDER = ['Music Video', 'Micro Drama', 'Horror', 'Kids'];
+
+/* tolerant category matching — "Music Videos", "music video " and "Music Video"
+   are all the same category. Lowercase, squash spaces, drop a trailing s. */
+const normCat = c => String(c).toLowerCase().trim().replace(/\s+/g, ' ').replace(/s$/, '');
+
+/* category colors — known cats fixed (normalized keys), new ones auto-assigned */
+const KNOWN_CAT_COLORS = { horror: '#d4624a', kid: '#56a87c', 'music video': '#8d83d6', 'micro drama': '#c79a3b' };
+const CAT_RAMP = ['#6f93c4', '#b873aa', '#56a8ad', '#cd8440', '#9aa84f'];
 const catColors = {};
 let rampIdx = 0;
 function colorFor(cat) {
-  const k = String(cat).toLowerCase();
+  const k = normCat(cat);
   if (!catColors[k]) catColors[k] = KNOWN_CAT_COLORS[k] || CAT_RAMP[rampIdx++ % CAT_RAMP.length];
   return catColors[k];
 }
@@ -975,12 +992,21 @@ function buildGallery(videos) {
     attachPreview(fc, featuredVid.id);
   }
 
-  /* filter tabs — derived from data, scales to any future category */
-  const rest = videos.filter(v => !v.featured);
-  const cats = [...new Set(rest.map(v => v.category))];
+  /* filter tabs — canonical categories always show (in CATEGORY_ORDER), and any
+     extra category found in gallery.json is appended automatically.
+     The featured video is listed in the catalogue too — it lives in both places. */
+  const rest = videos;
+  const extraCats = [];
+  rest.forEach(v => {
+    if (CATEGORY_ORDER.some(k => normCat(k) === normCat(v.category))) return;
+    if (extraCats.some(c => normCat(c) === normCat(v.category))) return;
+    extraCats.push(v.category);
+  });
+  const cats = [...CATEGORY_ORDER, ...extraCats];
   const row = document.getElementById('filter-row');
   row.innerHTML = ['All', ...cats].map((c, i) => {
-    const n = c === 'All' ? rest.length : rest.filter(v => v.category === c).length;
+    const n = c === 'All' ? rest.length
+      : rest.filter(v => normCat(v.category) === normCat(c)).length;
     return `<button class="filter-tab${i === 0 ? ' active' : ''}" role="tab" aria-selected="${i === 0}" data-filter="${esc(c)}">${esc(c)}<span class="cnt">${String(n).padStart(2, '0')}</span></button>`;
   }).join('');
 
@@ -990,6 +1016,7 @@ function buildGallery(videos) {
     const card = document.createElement('div');
     card.className = 'video-card';
     card.dataset.id = v.id;
+    card.dataset.title = v.title;
     card.dataset.category = v.category;
     card.innerHTML = `
       <div class="vc-thumb">
@@ -1406,10 +1433,25 @@ document.getElementById('filter-row').addEventListener('click', e => {
   });
   const f = tab.dataset.filter;
   const cards = [...strip.querySelectorAll('.video-card')];
-  cards.forEach(c => c.classList.toggle('hidden-cat', !(f === 'All' || c.dataset.category === f)));
+  cards.forEach(c => c.classList.toggle('hidden-cat',
+    !(f === 'All' || normCat(c.dataset.category) === normCat(f))));
+  const visible = cards.filter(c => !c.classList.contains('hidden-cat'));
+  /* a canonical category may not have videos yet — say so instead of going blank */
+  let emptyEl = strip.querySelector('.strip-empty');
+  if (!visible.length) {
+    if (!emptyEl) {
+      emptyEl = document.createElement('div');
+      emptyEl.className = 'strip-empty';
+      strip.appendChild(emptyEl);
+    }
+    emptyEl.innerHTML = `<span class="se-k">${esc(tab.dataset.filter)}</span>In production — first release coming soon.`;
+    emptyEl.style.display = '';
+  } else if (emptyEl) {
+    emptyEl.style.display = 'none';
+  }
   strip.scrollTo({ left: 0, behavior: 'smooth' });
-  if (!reduceMotion) {
-    gsap.fromTo(cards.filter(c => !c.classList.contains('hidden-cat')),
+  if (!reduceMotion && visible.length) {
+    gsap.fromTo(visible,
       { opacity: 0, y: 24 },
       { opacity: 1, y: 0, duration: .5, stagger: .05, ease: 'power3.out', clearProps: 'opacity,transform' });
   }

@@ -570,12 +570,15 @@ function render() {
 /* ================= Modal ================= */
 const customCatInput = document.getElementById('input-custom-cat');
 const fieldCat = document.getElementById('field-cat');
-const BASE_CATS = ['Horror', 'Kids'];
+const BASE_CATS = ['Music Video', 'Micro Drama', 'Horror', 'Kids'];
 
+const normCat = c => String(c).toLowerCase().trim().replace(/\s+/g, ' ').replace(/s$/, '');
 function knownCats() {
-  const set = new Set(BASE_CATS);
-  videos.forEach(v => { if (v.category) set.add(v.category); });
-  return [...set];
+  const out = [...BASE_CATS];
+  videos.forEach(v => {
+    if (v.category && !out.some(c => normCat(c) === normCat(v.category))) out.push(v.category);
+  });
+  return out;
 }
 function renderCatPills() {
   catPills.innerHTML = knownCats().map(c =>
@@ -626,7 +629,7 @@ function openModal(index) {
     inputId.value = v.id;
     inputTitle.value = v.title;
     inputFeat.checked = !!v.featured;
-    setModalCat(v.category || 'Horror');
+    setModalCat(knownCats().find(c => normCat(c) === normCat(v.category)) || v.category || 'Horror');
   } else {
     modalTitle.textContent = 'Add Video';
     inputId.value = '';
