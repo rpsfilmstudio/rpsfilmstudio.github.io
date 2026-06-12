@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@font-face{font-family:'Archivo Black';src:url('https://fonts.gstatic.com/s/archivoblack/v21/HTxqL289NzCGg4MzN6KJ7eW6CYyF.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';src:url('https://fonts.gstatic.com/s/jetbrainsmono/v18/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxTOlOV.woff2') format('woff2')}
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1200px;height:630px;background:#f0ecdf;overflow:hidden;position:relative;font-family:'Archivo Black',sans-serif}
+.grid{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(22,19,15,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(22,19,15,.06) 1px,transparent 1px);
+  background-size:84px 84px}
+.frame{position:absolute;inset:26px;border:2px solid rgba(22,19,15,.5)}
+.fc{position:absolute;width:20px;height:20px;border:3.5px solid #16130f}
+.fc.tl{top:-3px;left:-3px;border-right:0;border-bottom:0}
+.fc.tr{top:-3px;right:-3px;border-left:0;border-bottom:0}
+.fc.bl{bottom:-3px;left:-3px;border-right:0;border-top:0}
+.fc.br{bottom:-3px;right:-3px;border-left:0;border-top:0}
+.anno{position:absolute;font-family:'JetBrains Mono',monospace;font-size:15px;letter-spacing:.28em;color:#807763;text-transform:uppercase}
+.anno b{color:#bf3f1e;font-weight:400}
+.a1{top:58px;left:64px}
+.a2{top:58px;right:64px}
+.content{position:absolute;left:64px;top:170px}
+h1{font-size:104px;line-height:.95;letter-spacing:-1px;color:#16130f;text-transform:uppercase}
+h1 .outline{color:transparent;-webkit-text-stroke:3px #16130f}
+h1 .strike{position:relative}
+h1 .strike i{position:absolute;left:-2%;right:-2%;top:52%;height:8px;background:#bf3f1e;transform:rotate(-2deg)}
+.sub{margin-top:34px;font-family:'JetBrains Mono',monospace;font-size:19px;letter-spacing:.3em;color:#16130f;text-transform:uppercase}
+.sub em{font-style:normal;color:#bf3f1e}
+svg.cam{position:absolute;right:50px;top:110px;width:430px;opacity:.9}
+.cam .c{stroke:rgba(22,19,15,.18);stroke-width:1.5;fill:none}
+.cam .m{stroke:#16130f;stroke-width:6;fill:none}
+.cam .r{stroke:#bf3f1e;stroke-width:2;fill:none}
+</style>
+</head>
+<body>
+<div class="grid"></div>
+<div class="frame"><span class="fc tl"></span><span class="fc tr"></span><span class="fc bl"></span><span class="fc br"></span></div>
+<div class="anno a1">FIG. 01 — <b>THE STUDIO</b></div>
+<div class="anno a2">DOC NO. RPS-2026</div>
+<svg class="cam" viewBox="0 0 520 420">
+  <g class="c">
+    <line x1="0" y1="70" x2="520" y2="70"/><line x1="0" y1="150" x2="520" y2="150"/><line x1="0" y1="330" x2="520" y2="330"/>
+    <line x1="90" y1="0" x2="90" y2="420"/><line x1="330" y1="0" x2="330" y2="420"/><line x1="430" y1="0" x2="430" y2="420"/>
+    <circle cx="260" cy="210" r="170"/><line x1="60" y1="380" x2="460" y2="40"/>
+  </g>
+  <g class="m">
+    <circle cx="170" cy="105" r="48"/><circle cx="285" cy="105" r="34"/>
+    <rect x="105" y="160" width="225" height="170"/><circle cx="217" cy="245" r="44"/>
+    <path d="M330 205 L430 165 L430 325 L330 285 Z"/>
+  </g>
+  <g class="r">
+    <line x1="170" y1="105" x2="285" y2="105"/>
+    <line x1="105" y1="355" x2="330" y2="355"/><line x1="105" y1="349" x2="105" y2="361"/><line x1="330" y1="349" x2="330" y2="361"/>
+  </g>
+</svg>
+<div class="content">
+  <h1>FILMS<br><span class="outline">BUILT,</span><br>NOT <span class="strike">SHOT.<i></i></span></h1>
+  <div class="sub">RPS FILM STUDIO <em>—</em> AI FILM &amp; VISUAL STUDIO <em>—</em> RUDY SEN</div>
+</div>
+</body>
+</html>
